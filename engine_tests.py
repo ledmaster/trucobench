@@ -69,5 +69,84 @@ class TestTrucoPaulistaEngine(unittest.TestCase):
         self.assertEqual(result['current_bet'], 6)
         self.assertEqual(result['responding_team'], 0)
 
+    def test_betting_truco_accept(self):
+        # Scenario: Player 0 bets 'truco', then Player 1 accepts.
+        self.engine.start_betting_phase()
+        self.engine.handle_player_bet_action({'action': 'bet', 'bet_type': 'truco'}, 0)
+        self.engine.handle_player_bet_action({'action': 'accept'}, 1)
+        self.assertTrue(self.engine.betting_complete)
+        self.assertEqual(self.engine.current_bet, 3)
+        self.assertEqual(len(self.engine.bet_stack), 1)
+        self.assertEqual(self.engine.bet_stack[0]['type'], 'truco')
+
+    def test_betting_truco_six_accept(self):
+        # Scenario: Player 0 bets 'truco', then Player 1 raises with 'six', and Player 0 accepts.
+        self.engine.start_betting_phase()
+        self.engine.handle_player_bet_action({'action': 'bet', 'bet_type': 'truco'}, 0)
+        self.engine.handle_player_bet_action({'action': 'bet', 'bet_type': 'six'}, 1)
+        self.engine.handle_player_bet_action({'action': 'accept'}, 0)
+        self.assertTrue(self.engine.betting_complete)
+        self.assertEqual(self.engine.current_bet, 6)
+        self.assertEqual(len(self.engine.bet_stack), 2)
+        self.assertEqual(self.engine.bet_stack[0]['type'], 'truco')
+        self.assertEqual(self.engine.bet_stack[1]['type'], 'six')
+
+    def test_betting_truco_six_nine_accept(self):
+        # Scenario: Player 0 bets 'truco', Player 1 raises with 'six', then Player 0 raises with 'nine' and Player 1 accepts.
+        self.engine.start_betting_phase()
+        self.engine.handle_player_bet_action({'action': 'bet', 'bet_type': 'truco'}, 0)
+        self.engine.handle_player_bet_action({'action': 'bet', 'bet_type': 'six'}, 1)
+        self.engine.handle_player_bet_action({'action': 'bet', 'bet_type': 'nine'}, 0)
+        self.engine.handle_player_bet_action({'action': 'accept'}, 1)
+        self.assertTrue(self.engine.betting_complete)
+        self.assertEqual(self.engine.current_bet, 9)
+        self.assertEqual(len(self.engine.bet_stack), 3)
+        self.assertEqual(self.engine.bet_stack[2]['type'], 'nine')
+
+    def test_betting_truco_six_run(self):
+        # Scenario: Player 0 bets 'truco', Player 1 raises with 'six', then Player 0 runs.
+        self.engine.start_betting_phase()
+        self.engine.handle_player_bet_action({'action': 'bet', 'bet_type': 'truco'}, 0)
+        self.engine.handle_player_bet_action({'action': 'bet', 'bet_type': 'six'}, 1)
+        initial_scores = self.engine.scores.copy()
+        self.engine.handle_player_bet_action({'action': 'run'}, 0)
+        self.assertTrue(self.engine.betting_complete)
+        self.assertTrue(self.engine.skip_round)
+        # With two bets, run awards points equal to the previous bet's value (i.e. 3) to the betting team of the last bet.
+        scoring_team = self.engine.bet_stack[-1]['team']
+        self.assertEqual(self.engine.scores[scoring_team], initial_scores[scoring_team] + 3)
+
+    def test_both_pass_no_bet(self):
+        # Scenario: Both players pass without any bet being initiated.
+        self.engine.start_betting_phase()
+        self.engine.handle_player_bet_action({'action': 'pass'}, 0)
+        self.engine.handle_player_bet_action({'action': 'pass'}, 1)
+        self.assertTrue(self.engine.betting_complete)
+        self.assertEqual(len(self.engine.bet_stack), 0)
+        self.assertEqual(self.engine.current_bet, 1)  # Remains the default bet (1)
+
+    def test_betting_truco_pass(self):
+        # Scenario: Player 0 bets 'truco', then Player 1 passes (which the engine treats as accept due to a pending bet).
+        self.engine.start_betting_phase()
+        self.engine.handle_player_bet_action({'action': 'bet', 'bet_type': 'truco'}, 0)
+        self.engine.handle_player_bet_action({'action': 'pass'}, 1)
+        self.assertTrue(self.engine.betting_complete)
+        self.assertEqual(self.engine.current_bet, 3)
+        self.assertEqual(len(self.engine.bet_stack), 1)
+
+    def test_betting_truco_six_nine_run(self):
+        # Scenario: Player 0 bets 'truco', Player 1 raises with 'six', Player 0 raises with 'nine',
+        # then Player 1 runs. With three bets, run should award points equal to the previous bet's value (i.e. 6)
+        self.engine.start_betting_phase()
+        self.engine.handle_player_bet_action({'action': 'bet', 'bet_type': 'truco'}, 0)
+        self.engine.handle_player_bet_action({'action': 'bet', 'bet_type': 'six'}, 1)
+        self.engine.handle_player_bet_action({'action': 'bet', 'bet_type': 'nine'}, 0)
+        initial_scores = self.engine.scores.copy()
+        self.engine.handle_player_bet_action({'action': 'run'}, 1)
+        self.assertTrue(self.engine.betting_complete)
+        self.assertTrue(self.engine.skip_round)
+        scoring_team = self.engine.bet_stack[-1]['team']
+        self.assertEqual(self.engine.scores[scoring_team], initial_scores[scoring_team] + 6)
+
 if __name__ == '__main__':
     unittest.main()
