@@ -1,6 +1,6 @@
 from datetime import datetime
 import random
-from engine import TrucoPaulistaEngine
+from engine import TrucoEngine
 from litellm import completion
 from match_logger import save_match_history
 import re
@@ -24,12 +24,13 @@ def format_game_state(engine, player_cards, player_num):
     }
 
 class TrucoPlayer:
-    def __init__(self, name):
+    def __init__(self, name, model='openai/gpt-4o-mini'):
         self.name = name
+        self.model = model
         
     def decide_bet(self, game_state):
         """Decide whether to make/respond to a bet"""
-        rules = """Você é um jogador de Truco Paulista tomando uma decisão sobre apostas.
+        rules = """Você é um jogador de Truco tomando uma decisão sobre apostas.
 
 IMPORTANTE: Se houver uma aposta pendente (pending_bet não é None), você DEVE responder com uma das ações:
 - 'accept' para aceitar
@@ -97,7 +98,7 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
         ]
         
         try:
-            response = completion(model='openai/gpt-4o-mini',
+            response = completion(model=self.model,
                                 messages=messages)
             
             content = response.choices[0].message.content
@@ -127,7 +128,7 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
             
     def decide_play(self, game_state):
         """Decide which card to play"""
-        rules = """Você é um jogador de Truco Paulista decidindo qual carta jogar.
+        rules = """Você é um jogador de Truco decidindo qual carta jogar.
 
 Regras do jogo:
 O Truco é disputado em mãos. Cada mão vale inicialmente 1 ponto, e ganha o jogo quem fizer 12 pontos. 
@@ -166,9 +167,9 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
             {"role": "user", "content": state_info}
         ]
         
-        print(state_info)
+        #print(state_info)
         try:
-            response = completion(model='openai/gpt-4o-mini',
+            response = completion(model=self.model,
                                 messages=messages)
             
             content = response.choices[0].message.content
@@ -199,7 +200,7 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
 
 def play_match():
     """Play a single match between two LLM players"""
-    engine = TrucoPaulistaEngine()
+    engine = TrucoEngine()
     
     # Initialize match history
     match_history = {
