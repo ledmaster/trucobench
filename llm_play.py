@@ -1,6 +1,7 @@
 import random
 from engine import TrucoPaulistaEngine
 from litellm import completion
+import re
 
 def format_game_state(engine, player_cards, player_num):
     """Format game state for LLM consumption"""
@@ -89,7 +90,7 @@ Qual sua próxima jogada? Você deve retornar um dicionário Python com uma das 
                                 messages=messages)
             
             # Parse the response using regex to find the dictionary
-            import re
+            
             content = response.choices[0].message.content
             print(content)
             
