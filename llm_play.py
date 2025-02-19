@@ -3,7 +3,7 @@ import random
 from engine import TrucoPaulistaEngine
 from litellm import completion
 import logging
-logging.getLogger('litellm').setLevel(logging.ERROR)
+#logging.getLogger('litellm').setLevel(logging.ERROR)
 import re
 from match_logger import setup_logger, save_match_history
 
