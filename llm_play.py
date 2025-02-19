@@ -56,11 +56,30 @@ Estado atual do jogo:
 - Aposta atual: {game_state['current_bet']}
 - Histórico de apostas: {game_state['bet_history']}
 
-Qual sua próxima jogada? Você pode:
-1. Jogar uma carta ('action': 'play', 'card': [carta])
-2. Pedir truco ('action': 'bet', 'bet_type': 'truco/six/nine/twelve')
-3. Aceitar aposta ('action': 'accept')
-4. Correr ('action': 'run')"""
+Força das cartas (da mais fraca para mais forte):
+4 < 5 < 6 < 7 < Q < J < K < A < 2 < 3 < Manilhas
+
+Manilhas (da mais forte para mais fraca):
+- Manilha de Paus (mais forte)
+- Manilha de Copas
+- Manilha de Espadas
+- Manilha de Ouros (mais fraca)
+
+Qual sua próxima jogada? Você deve retornar um dicionário Python com uma das seguintes estruturas:
+
+1. Para jogar uma carta:
+   {'action': 'play', 'card': ('rank', 'suit')}
+   Exemplo: {'action': 'play', 'card': ('K', 'P')}
+
+2. Para pedir truco/aumentar aposta:
+   {'action': 'bet', 'bet_type': 'truco'/'six'/'nine'/'twelve'}
+   Exemplo: {'action': 'bet', 'bet_type': 'truco'}
+
+3. Para aceitar uma aposta:
+   {'action': 'accept'}
+
+4. Para correr de uma aposta:
+   {'action': 'run'}"""
 
         messages = [
             {"role": "system", "content": rules},
