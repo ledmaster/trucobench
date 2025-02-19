@@ -21,7 +21,51 @@ class TrucoPlayer:
         
     def decide_move(self, game_state):
         """Make a decision based on game state and strategy"""
-        messages = [{"role": "system", "content": f"Você é o jogador {self.name} jogando Truco"}]
+        rules = """Você é um jogador de Truco Paulista. Regras do jogo:
+
+O Truco é disputado em mãos. Cada mão vale inicialmente 1 ponto, e ganha o jogo quem fizer 12 pontos. 
+Cada jogador recebe três cartas por mão.
+
+Uma carta é virada (a vira) e a carta seguinte em seus 4 naipes são as Manilhas, na ordem de força:
+- Paus (mais forte)
+- Copas
+- Espadas
+- Ouros (mais fraca)
+
+A mão é dividida em 3 rodadas. Em cada rodada, cada jogador joga uma carta.
+Quem ganhar 2 rodadas ganha a mão e marca os pontos.
+
+A qualquer momento pode-se pedir Truco para aumentar a aposta:
+- Truco: aumenta para 3 pontos
+- Seis: aumenta para 6 pontos
+- Nove: aumenta para 9 pontos
+- Twelve: aumenta para 12 pontos
+
+Ao ser trucado, pode-se:
+1. Aceitar (a mão vale o valor proposto)
+2. Aumentar para o próximo valor
+3. Correr (o adversário ganha os pontos da aposta anterior)"""
+
+        state_info = f"""
+Estado atual do jogo:
+- Suas cartas: {game_state['my_cards']}
+- Vira: {game_state['vira']}
+- Manilhas: {game_state['manilhas']}
+- Seu placar: {game_state['my_score']}
+- Placar adversário: {game_state['opponent_score']}
+- Aposta atual: {game_state['current_bet']}
+- Histórico de apostas: {game_state['bet_history']}
+
+Qual sua próxima jogada? Você pode:
+1. Jogar uma carta ('action': 'play', 'card': [carta])
+2. Pedir truco ('action': 'bet', 'bet_type': 'truco/six/nine/twelve')
+3. Aceitar aposta ('action': 'accept')
+4. Correr ('action': 'run')"""
+
+        messages = [
+            {"role": "system", "content": rules},
+            {"role": "user", "content": state_info}
+        ]
         
         response = completion(model='openai/gpt-4o-mini',
                             messages=messages)
