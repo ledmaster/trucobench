@@ -297,7 +297,7 @@ def play_match():
             print(f"Round winner: Player {'A' if winner == 0 else 'B'}")
             round_data['winner'] = 'A' if winner == 0 else 'B'
             hand_data['rounds'].append(round_data)
-            print(f"Scores {engine.scores}")
+            #print(f"Scores {engine.scores}")
             
             # Check for hand winner
             hand_winner = engine.check_hand_winner()

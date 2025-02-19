@@ -159,6 +159,17 @@ class TestTrucoPaulistaEngine(unittest.TestCase):
         self.assertEqual(len(engine.bet_stack), 0)
         self.assertEqual(result, [(0, {'action': 'pass'}), (1, {'action': 'pass'})])
 
+    def test_run_betting_phase_pass_bet(self):
+        engine = TrucoPaulistaEngine()
+        actions = [{'action': 'pass'}, {'action': 'bet', 'bet_type': 'truco'}, {'action': 'accept'}]
+        def get_bet_action(player_idx):
+            return actions.pop(0)
+        result = engine.run_betting_phase(get_bet_action)
+        self.assertTrue(engine.betting_complete)
+        self.assertEqual(engine.current_bet, 3)  # Default bet remains unchanged
+        self.assertEqual(len(engine.bet_stack), 1)
+        self.assertEqual(result, [(0, {'action': 'pass'}), (1, {'action': 'bet', 'bet_type': 'truco'}), (0, {'action': 'accept'})])
+
     def test_run_betting_phase_truco_accept(self):
         engine = TrucoPaulistaEngine()
         actions = [{'action': 'bet', 'bet_type': 'truco'}, {'action': 'accept'}]
