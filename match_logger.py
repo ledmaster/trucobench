@@ -2,6 +2,7 @@ import logging
 import json
 from datetime import datetime
 import os
+from human_readable_match import format_match_history
 
 def setup_logger():
     """Setup logging configuration"""
@@ -32,5 +33,8 @@ def save_match_history(match_data):
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = f'match_history/match_{timestamp}.json'
     
+    formatted_text = format_match_history(match_data)
+    # Update the filename extension to .txt for clarity
+    filename = filename.replace('.json', '.txt')
     with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(match_data, f, indent=2)
+        f.write(formatted_text)
