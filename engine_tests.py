@@ -26,13 +26,13 @@ class TestTrucoPaulistaEngine(unittest.TestCase):
     def test_manilha_rules(self):
         """Test manilha determination based on vira"""
         # Simulate vira as 4
-        self.engine.vira = ('4', '♠')
+        self.engine.vira = ('4', 'E')
         self.engine._set_manilhas()
         expected_manilhas = [
-            ('5', '♣'),  # Strongest - Zap
-            ('5', '♥'),  # Second - Copas
-            ('5', '♠'),  # Third - Espadas
-            ('5', '♦'),  # Weakest - Ouros
+            ('5', 'P'),  # Strongest - Zap
+            ('5', 'C'),  # Second - Copas
+            ('5', 'E'),  # Third - Espadas
+            ('5', 'O'),  # Weakest - Ouros
         ]
         self.assertEqual(self.engine.manilhas, expected_manilhas)
 
@@ -40,20 +40,20 @@ class TestTrucoPaulistaEngine(unittest.TestCase):
         """Test card comparison rules"""
         # Regular cards (no manilhas)
         self.assertTrue(
-            self.engine._compare_cards(('3', '♠'), ('2', '♥'))
+            self.engine._compare_cards(('3', 'E'), ('2', 'C'))
         )
         self.assertTrue(
-            self.engine._compare_cards(('2', '♠'), ('A', '♥'))
+            self.engine._compare_cards(('2', 'E'), ('A', 'C'))
         )
         
         # Manilha comparison
-        self.engine.vira = ('4', '♠')
+        self.engine.vira = ('4', 'E')
         self.engine._set_manilhas()
         self.assertTrue(
-            self.engine._compare_cards(('5', '♣'), ('5', '♥'))  # Paus beats Copas
+            self.engine._compare_cards(('5', 'P'), ('5', 'C'))  # Paus beats Copas
         )
         self.assertTrue(
-            self.engine._compare_cards(('5', '♥'), ('5', '♠'))  # Copas beats Espadas
+            self.engine._compare_cards(('5', 'C'), ('5', 'E'))  # Copas beats Espadas
         )
 
     def test_bet_handling(self):
