@@ -274,7 +274,6 @@ def play_match():
                     passed_count = sum(1 for b in round_data['betting'] if b['action'] == 'pass')
                     if passed_count == 2:
                         betting_complete = True
-                    continue
                 
                 # Handle bet actions
                 if bet['action'] == 'bet':
