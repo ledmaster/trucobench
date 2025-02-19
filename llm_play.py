@@ -236,63 +236,34 @@ def play_match():
                 'plays': []
             }
             
-            # Betting phase
-            current_player = 0  # Start with player A
-            betting_complete = False
-            skip_round = False
+            # Initialize betting phase
+            engine.start_betting_phase()
 
-            while not betting_complete:
-                # Get current player's state and decision
+            # Betting phase
+            while not engine.betting_complete:
+                current_player = engine.current_betting_player
+                player = player_a if current_player == 0 else player_b
                 state = format_game_state(engine, 
-                                        engine.player_hands[current_player],
-                                        current_player)
-                bet = (player_a if current_player == 0 else player_b).decide_bet(state)
+                        engine.player_hands[current_player],
+                        current_player)
+                
+                bet_action = player.decide_bet(state)
                 player_name = 'A' if current_player == 0 else 'B'
                 
-                # If player doesn't bet
-                if bet['action'] == 'pass':
-                    # Track that this player passed
-                    round_data['betting'].append({
-                        'player': player_name,
-                        'action': 'pass'
-                    })
-                    # Switch to other player
-                    current_player = 1 - current_player
-                    # Only end betting if both players have passed
-                    passed_count = sum(1 for b in round_data['betting'] if b['action'] == 'pass')
-                    if passed_count == 2:
-                        betting_complete = True
-                elif bet['action'] == 'bet':
-                    print(f"Player {player_name} bets: {bet['bet_type']}")
-                    round_data['betting'].append({
-                        'player': player_name,
-                        'bet': bet['bet_type']
-                    })
-                    engine.handle_bet(bet['bet_type'], current_player)
-                    current_player = 1 - current_player  # Switch to other player
-                
-                elif bet['action'] == 'accept':
-                    print(f"Player {player_name} accepts the bet")
-                    round_data['betting'].append({
-                        'player': player_name,
-                        'action': 'accept'
-                    })
-                    betting_complete = True
-                
-                elif bet['action'] == 'run':
-                    print(f"Player {player_name} runs - Player {1-current_player} wins the hand")
-                    round_data['betting'].append({
-                        'player': player_name,
-                        'action': 'run'
-                    })
-                    engine.run_from_bet(current_player)
-                    hand_data['rounds'].append(round_data)
-                    match_history['rounds'].append(hand_data)
-                    #save_match_history(match_history)
-                    skip_round = True
-                    break  # Exit betting loop and hand processing
-            
-            if skip_round:
+                try:
+                    engine.handle_player_bet_action(bet_action, current_player)
+                except Exception as e:
+                    print(f"Error processing bet: {e}")
+                    # Fallback to passing
+                    engine.handle_player_bet_action({'action': 'pass'}, current_player)
+
+                # Record the action
+                round_data['betting'].append({
+                    'player': player_name,
+                    'action': bet_action.get('action', 'error')
+                })
+
+            if engine.skip_round:
                 continue
             # Card playing phase
             # Player A's turn

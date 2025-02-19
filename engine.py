@@ -15,6 +15,11 @@ class TrucoPaulistaEngine:
         self.current_bet = 1
         self.round_winners = []  # Track winners of each round in the hand
         self.game_finished = False
+        self.current_betting_player = 0
+        self.betting_complete = False
+        self.pending_bet_response = None
+        self.last_bet_action = None
+        self.skip_round = False
         
     def new_match(self):
         """Initialize a new match with shuffled deck and dealt cards"""
@@ -161,6 +166,46 @@ class TrucoPaulistaEngine:
         # Check if game is finished
         if self.scores[winning_team] >= 12:
             self.game_finished = True
+            
+    def start_betting_phase(self):
+        """Initialize betting phase state"""
+        self.current_betting_player = 0  # Player index
+        self.betting_complete = False
+        self.pending_bet_response = None
+        self.last_bet_action = None
+        self.skip_round = False
+
+    def handle_player_bet_action(self, action, player_idx):
+        """Process a player's betting action"""
+        if self.betting_complete:
+            return
+
+        # Validate it's the player's turn
+        if player_idx != self.current_betting_player:
+            raise ValueError("Not this player's turn to act")
+
+        if action['action'] == 'bet':
+            self.handle_bet(action['bet_type'], player_idx)
+            self.last_bet_action = action
+            self.current_betting_player = 1 - self.current_betting_player
+            self.pending_bet_response = True
+        elif action['action'] == 'accept':
+            self.current_bet = self.bet_stack[-1]['value']
+            self.betting_complete = True
+        elif action['action'] == 'run':
+            self.run_from_bet(player_idx)
+            self.betting_complete = True
+            self.skip_round = True
+        elif action['action'] == 'pass':
+            if self.pending_bet_response:
+                # Passing on a pending bet is invalid, treat as accept
+                self.current_bet = self.bet_stack[-1]['value']
+                self.betting_complete = True
+            else:
+                # Both players passing means keep current bet
+                self.current_betting_player = 1 - self.current_betting_player
+                if self.current_betting_player == 0:  # Both passed
+                    self.betting_complete = True
             
     def play_card(self, player_idx, card):
         """Play a card from a player's hand"""
