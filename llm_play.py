@@ -134,14 +134,6 @@ Qual sua próxima jogada? Você deve retornar um dicionário Python com uma das 
             if action['action'] == 'bet' and 'bet_type' not in action:
                 raise ValueError("Missing 'bet_type' for bet action")
                 
-            # If action is 'accept', force a card play
-            if action['action'] == 'accept':
-                # Play first card as fallback after accepting
-                return {
-                    'action': 'play',
-                    'card': game_state['my_cards'][0]
-                }
-                
             return action
             
         except Exception as e:
