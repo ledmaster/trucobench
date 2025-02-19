@@ -21,7 +21,8 @@ class TestTrucoPaulistaEngine(unittest.TestCase):
         # Check if vira was set
         self.assertIsNotNone(self.engine.vira)
         # Each player should have 3 cards
-        self.assertEqual(len(self.engine.current_hand), 6)  # 2 players * 3 cards
+        self.assertEqual(len(self.engine.player_hands[0]), 3)
+        self.assertEqual(len(self.engine.player_hands[1]), 3)
 
     def test_manilha_rules(self):
         """Test manilha determination based on vira"""

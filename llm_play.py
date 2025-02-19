@@ -33,9 +33,9 @@ def play_match():
     engine = TrucoPaulistaEngine()
     engine.new_match()
     
-    # Split dealt cards between players
-    player_a_cards = engine.current_hand[:3]
-    player_b_cards = engine.current_hand[3:]
+    # Get player hands
+    player_a_cards = engine.player_hands[0]
+    player_b_cards = engine.player_hands[1]
     
     # Play three rounds
     for round_num in range(3):

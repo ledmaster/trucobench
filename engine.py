@@ -9,7 +9,7 @@ class TrucoPaulistaEngine:
         self.deck = []
         self.vira = None
         self.manilhas = []
-        self.current_hand = []
+        self.player_hands = {0: [], 1: []}  # Cards for each player
         self.bet_stack = []
         self.current_bet = 1
         
@@ -19,10 +19,10 @@ class TrucoPaulistaEngine:
         random.shuffle(self.deck)
         
         # Deal 3 cards to each player
-        self.current_hand = []
-        for _ in range(2):  # 2 players
-            player_cards = [self.deck.pop() for _ in range(3)]
-            self.current_hand.extend(player_cards)
+        self.player_hands = {
+            0: [self.deck.pop() for _ in range(3)],
+            1: [self.deck.pop() for _ in range(3)]
+        }
             
         # Set vira and determine manilhas
         self.vira = self.deck.pop()
