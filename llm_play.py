@@ -178,7 +178,9 @@ def play_match():
             while True:
                 # Get player A's decision
                 state_a = format_game_state(engine, player_a_cards, 0)
-                print(state_a)
+                logger.info(f"Player A cards: {player_a_cards}")
+                logger.info(f"Player B cards: {player_b_cards}")
+                logger.info(f"Game state A: {state_a}")
                 move_a = player_a.decide_move(state_a)
                 
                 if move_a['action'] == 'bet':
@@ -213,6 +215,8 @@ def play_match():
             # Card playing phase
             # Player A's turn
             state_a = format_game_state(engine, player_a_cards, 0)
+            logger.info(f"Player A cards before play: {player_a_cards}")
+            logger.info(f"Player B cards before play: {player_b_cards}")
             move_a = player_a.decide_move(state_a)
             card_a = move_a['card']
             player_a_cards.remove(card_a)
@@ -224,6 +228,8 @@ def play_match():
             
             # Player B's turn
             state_b = format_game_state(engine, player_b_cards, 1)
+            logger.info(f"Player A cards before B's play: {player_a_cards}")
+            logger.info(f"Player B cards before B's play: {player_b_cards}")
             move_b = player_b.decide_move(state_b)
             card_b = move_b['card']
             player_b_cards.remove(card_b)
@@ -232,6 +238,17 @@ def play_match():
                 'player': 'B',
                 'card': card_b
             })
+            
+            # Log remaining cards after plays
+            logger.info(f"Player A remaining cards: {player_a_cards}")
+            logger.info(f"Player B remaining cards: {player_b_cards}")
+            
+            # Save intermediate state
+            hand_data['current_cards'] = {
+                'A': player_a_cards.copy(),
+                'B': player_b_cards.copy()
+            }
+            save_match_history(match_history)
             
             # Resolve round
             winner = engine.resolve_round([card_a, card_b])
