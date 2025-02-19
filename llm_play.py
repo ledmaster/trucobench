@@ -15,12 +15,10 @@ def format_game_state(engine, player_cards, player_num):
     }
 
 class TrucoPlayer:
-    def __init__(self, name, strategy="aggressive"):
+    def __init__(self, name):
         self.name = name
-        self.strategy = strategy
         
     def decide_move(self, game_state):
-        """Make a decision based on game state and strategy"""
         rules = """Você é um jogador de Truco Paulista. Regras do jogo:
 
 O Truco é disputado em mãos. Cada mão vale inicialmente 1 ponto, e ganha o jogo quem fizer 12 pontos. 
@@ -119,8 +117,8 @@ def play_match():
     engine = TrucoPaulistaEngine()
     
     # Create players with different strategies
-    player_a = TrucoPlayer("A", strategy="aggressive")
-    player_b = TrucoPlayer("B", strategy="conservative")
+    player_a = TrucoPlayer("A")
+    player_b = TrucoPlayer("B")
     
     while not engine.game_finished:
         engine.new_match()
