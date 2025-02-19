@@ -67,28 +67,33 @@ Qual sua próxima jogada? Você pode:
             {"role": "user", "content": state_info}
         ]
         
-        response = completion(model='openai/gpt-4o-mini',
-                            messages=messages)
-        
-        if self.strategy == "aggressive":
-            # Bet truco 20% of the time
-            if random.random() < 0.2 and game_state['current_bet'] == 1:
-                return {
-                    'action': 'bet',
-                    'bet_type': 'truco'
-                }
-        elif self.strategy == "conservative":
-            # Always accept bets, never initiate
-            if game_state['current_bet'] > 1:
-                return {
-                    'action': 'accept'
-                }
+        try:
+            response = completion(model='openai/gpt-4o-mini',
+                                messages=messages)
+            
+            # Parse the response into a valid action dictionary
+            # Expected format: {'action': 'play/bet/accept/run', ...other params}
+            action = eval(response.choices[0].message.content)
+            
+            # Validate the action has required fields
+            if 'action' not in action:
+                raise ValueError("Missing 'action' in response")
                 
-        # Default action: play first card
-        return {
-            'action': 'play',
-            'card': game_state['my_cards'][0]
-        }
+            if action['action'] == 'play' and 'card' not in action:
+                raise ValueError("Missing 'card' for play action")
+                
+            if action['action'] == 'bet' and 'bet_type' not in action:
+                raise ValueError("Missing 'bet_type' for bet action")
+                
+            return action
+            
+        except Exception as e:
+            print(f"Error parsing LLM response: {e}")
+            # Fallback to playing first card if there's an error
+            return {
+                'action': 'play',
+                'card': game_state['my_cards'][0]
+            }
 
 def play_match():
     """Play a single match between two LLM players"""
