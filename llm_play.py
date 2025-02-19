@@ -227,8 +227,8 @@ def play_match():
             'vira': engine.vira,
             'manilhas': engine.manilhas,
             'initial_hands': {
-                'A': player_a_cards.copy(),
-                'B': player_b_cards.copy()
+                'A': engine.player_hands[0].copy(),
+                'B': engine.player_hands[1].copy()
             },
             'rounds': []
         }
@@ -303,9 +303,9 @@ def play_match():
                 
             # Card playing phase
             # Player A's turn
-            state_a = format_game_state(engine, player_a_cards, 0)
-            logger.info(f"Player A cards before play: {player_a_cards}")
-            logger.info(f"Player B cards before play: {player_b_cards}")
+            state_a = format_game_state(engine, engine.player_hands[0], 0)
+            logger.info(f"Player A cards before play: {engine.player_hands[0]}")
+            logger.info(f"Player B cards before play: {engine.player_hands[1]}")
             play_a = player_a.decide_play(state_a)
             card_a = tuple(play_a['card'])  # Convert list to tuple
             engine.play_card(0, card_a)
@@ -316,9 +316,9 @@ def play_match():
             })
             
             # Player B's turn
-            state_b = format_game_state(engine, player_b_cards, 1)
-            logger.info(f"Player A cards before B's play: {player_a_cards}")
-            logger.info(f"Player B cards before B's play: {player_b_cards}")
+            state_b = format_game_state(engine, engine.player_hands[1], 1)
+            logger.info(f"Player A cards before B's play: {engine.player_hands[0]}")
+            logger.info(f"Player B cards before B's play: {engine.player_hands[1]}")
             play_b = player_b.decide_play(state_b)
             card_b = tuple(play_b['card'])  # Convert list to tuple
             engine.play_card(1, card_b)
@@ -329,13 +329,13 @@ def play_match():
             })
             
             # Log remaining cards after plays
-            logger.info(f"Player A remaining cards: {player_a_cards}")
-            logger.info(f"Player B remaining cards: {player_b_cards}")
+            logger.info(f"Player A remaining cards: {engine.player_hands[0]}")
+            logger.info(f"Player B remaining cards: {engine.player_hands[1]}")
             
             # Save intermediate state
             hand_data['current_cards'] = {
-                'A': player_a_cards.copy(),
-                'B': player_b_cards.copy()
+                'A': engine.player_hands[0].copy(),
+                'B': engine.player_hands[1].copy()
             }
             save_match_history(match_history)
             
