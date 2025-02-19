@@ -32,15 +32,20 @@ class TrucoPlayer:
     def __init__(self, name):
         self.name = name
         
-    def decide_move(self, game_state):
-        rules = """Você é um jogador de Truco Paulista. 
+    def decide_bet(self, game_state):
+        """Decide whether to make/respond to a bet"""
+        rules = """Você é um jogador de Truco Paulista tomando uma decisão sobre apostas.
 
 IMPORTANTE: Se houver uma aposta pendente (pending_bet não é None), você DEVE responder com uma das ações:
 - 'accept' para aceitar
 - 'run' para correr
 - 'bet' com o próximo valor para aumentar
 
-Regras do jogo:
+Se não houver aposta pendente, você pode:
+- Retornar None para não fazer aposta
+- Fazer uma aposta com 'bet' e o tipo de aposta
+
+Regras de apostas:
 
 O Truco é disputado em mãos. Cada mão vale inicialmente 1 ponto, e ganha o jogo quem fizer 12 pontos. 
 Cada jogador recebe três cartas por mão.
@@ -74,27 +79,18 @@ Estado atual do jogo:
 - Placar adversário: {game_state['opponent_score']}
 - Aposta atual: {game_state['current_bet']}
 - Histórico de apostas: {game_state['bet_history']}
+- Aposta pendente: {game_state['pending_bet']}
 
-Força das cartas (da mais fraca para mais forte):
-4 < 5 < 6 < 7 < Q < J < K < A < 2 < 3 < Manilhas
+Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das seguintes estruturas:
 
-Manilhas (da mais forte para mais fraca):
-- Manilha de Paus (mais forte) - P
-- Manilha de Copas - C
-- Manilha de Espadas - E
-- Manilha de Ouros (mais fraca) - O
-
-Qual sua próxima jogada? Você deve retornar um dicionário Python com uma das seguintes estruturas:
-
-1. Para jogar uma carta:
-   {{"action": "play", "card": ["rank", "suit"]}}
-   Exemplo: {{"action": "play", "card": ["K", "P"]}}
+1. Para não fazer aposta:
+   None
 
 2. Para pedir truco/aumentar aposta:
    {{"action": "bet", "bet_type": "truco/six/nine/twelve"}}
    Exemplo: {{"action": "bet", "bet_type": "truco"}}
 
-3. Para aceitar uma aposta:
+3. Para aceitar uma aposta pendente:
    {{'action': 'accept'}}
 
 4. Para correr de uma aposta:
@@ -109,7 +105,78 @@ Qual sua próxima jogada? Você deve retornar um dicionário Python com uma das 
             response = completion(model='openai/gpt-4o-mini',
                                 messages=messages)
             
-            # Parse the response using regex to find the dictionary
+            content = response.choices[0].message.content
+            print(content)
+            
+            if "None" in content or "none" in content.lower():
+                return None
+                
+            # Look for content between ```python and ``` or just {...}
+            match = re.search(r'```python\s*({.*?})\s*```|({.*?})', content, re.DOTALL)
+            if not match:
+                return None
+                
+            # Use the first group that matched (either inside ``` or standalone)
+            dict_str = match.group(1) or match.group(2)
+            action = eval(dict_str)
+            
+            # Validate the action has required fields
+            if 'action' not in action:
+                return None
+                
+            if action['action'] == 'bet' and 'bet_type' not in action:
+                return None
+                
+            return action
+            
+        except Exception as e:
+            print(f"Error parsing LLM response: {e}")
+            return None
+            
+    def decide_play(self, game_state):
+        """Decide which card to play"""
+        rules = """Você é um jogador de Truco Paulista decidindo qual carta jogar.
+
+Regras do jogo:
+O Truco é disputado em mãos. Cada mão vale inicialmente 1 ponto, e ganha o jogo quem fizer 12 pontos. 
+Cada jogador recebe três cartas por mão.
+
+Uma carta é virada (a vira) e a carta seguinte em seus 4 naipes são as Manilhas, na ordem de força:
+- Paus (mais forte)
+- Copas
+- Espadas
+- Ouros (mais fraca)"""
+
+        state_info = f"""
+Estado atual do jogo:
+- Suas cartas: {game_state['my_cards']}
+- Vira: {game_state['vira']}
+- Manilhas: {game_state['manilhas']}
+- Seu placar: {game_state['my_score']}
+- Placar adversário: {game_state['opponent_score']}
+- Aposta atual: {game_state['current_bet']}
+
+Força das cartas (da mais fraca para mais forte):
+4 < 5 < 6 < 7 < Q < J < K < A < 2 < 3 < Manilhas
+
+Manilhas (da mais forte para mais fraca):
+- Manilha de Paus (mais forte) - P
+- Manilha de Copas - C
+- Manilha de Espadas - E
+- Manilha de Ouros (mais fraca) - O
+
+Qual carta você quer jogar? Retorne um dicionário Python com a estrutura:
+{{"action": "play", "card": ["rank", "suit"]}}
+Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
+
+        messages = [
+            {"role": "system", "content": rules},
+            {"role": "user", "content": state_info}
+        ]
+        
+        try:
+            response = completion(model='openai/gpt-4o-mini',
+                                messages=messages)
             
             content = response.choices[0].message.content
             print(content)
@@ -123,16 +190,9 @@ Qual sua próxima jogada? Você deve retornar um dicionário Python com uma das 
             dict_str = match.group(1) or match.group(2)
             action = eval(dict_str)
             
-            
             # Validate the action has required fields
-            if 'action' not in action:
-                raise ValueError("Missing 'action' in response")
-                
-            if action['action'] == 'play' and 'card' not in action:
-                raise ValueError("Missing 'card' for play action")
-                
-            if action['action'] == 'bet' and 'bet_type' not in action:
-                raise ValueError("Missing 'bet_type' for bet action")
+            if action['action'] != 'play' or 'card' not in action:
+                raise ValueError("Invalid play action")
                 
             return action
             
