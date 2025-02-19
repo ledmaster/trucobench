@@ -2,6 +2,10 @@ import random
 from engine import TrucoPaulistaEngine
 from litellm import completion
 import re
+from match_logger import setup_logger, save_match_history
+
+# Setup logger
+logger = setup_logger()
 
 def format_game_state(engine, player_cards, player_num):
     """Format game state for LLM consumption"""
@@ -128,6 +132,13 @@ def play_match():
     """Play a single match between two LLM players"""
     engine = TrucoPaulistaEngine()
     
+    # Initialize match history
+    match_history = {
+        'rounds': [],
+        'final_scores': {'A': 0, 'B': 0},
+        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    
     # Create players with different strategies
     player_a = TrucoPlayer("A")
     player_b = TrucoPlayer("B")
@@ -139,13 +150,28 @@ def play_match():
         player_a_cards = engine.player_hands[0].copy()
         player_b_cards = engine.player_hands[1].copy()
         
-        print("\nNew Hand")
+        logger.info("\n=== New Hand ===")
+        hand_data = {
+            'vira': engine.vira,
+            'manilhas': engine.manilhas,
+            'initial_hands': {
+                'A': player_a_cards.copy(),
+                'B': player_b_cards.copy()
+            },
+            'rounds': []
+        }
         
         # Play up to 3 rounds per hand
         for round_num in range(3):
-            print(f"\nRound {round_num + 1}")
-            print(f"Vira: {engine.vira}")
-            print(f"Manilhas: {engine.manilhas}")
+            logger.info(f"\n--- Round {round_num + 1} ---")
+            logger.info(f"Vira: {engine.vira}")
+            logger.info(f"Manilhas: {engine.manilhas}")
+            
+            round_data = {
+                'round_num': round_num + 1,
+                'betting': [],
+                'plays': []
+            }
             
             # Betting phase
             while True:
@@ -155,7 +181,11 @@ def play_match():
                 move_a = player_a.decide_move(state_a)
                 
                 if move_a['action'] == 'bet':
-                    print(f"Player A bets: {move_a['bet_type']}")
+                    logger.info(f"Player A bets: {move_a['bet_type']}")
+                    round_data['betting'].append({
+                        'player': 'A',
+                        'bet': move_a['bet_type']
+                    })
                     bet_result = engine.handle_bet(move_a['bet_type'], 0)
                     
                     # Get player B's response
@@ -163,10 +193,18 @@ def play_match():
                     move_b = player_b.decide_move(state_b)
                     
                     if move_b['action'] == 'accept':
-                        print("Player B accepts the bet")
+                        logger.info("Player B accepts the bet")
+                        round_data['betting'].append({
+                            'player': 'B',
+                            'action': 'accept'
+                        })
                         break
                     else:
-                        print("Player B runs - Player A wins the hand")
+                        logger.info("Player B runs - Player A wins the hand")
+                        round_data['betting'].append({
+                            'player': 'B',
+                            'action': 'run'
+                        })
                         continue
                 else:
                     break  # No bet, proceed to card play
@@ -177,32 +215,59 @@ def play_match():
             move_a = player_a.decide_move(state_a)
             card_a = move_a['card']
             player_a_cards.remove(card_a)
-            print(f"Player A plays: {card_a}")
+            logger.info(f"Player A plays: {card_a}")
+            round_data['plays'].append({
+                'player': 'A',
+                'card': card_a
+            })
             
             # Player B's turn
             state_b = format_game_state(engine, player_b_cards, 1)
             move_b = player_b.decide_move(state_b)
             card_b = move_b['card']
             player_b_cards.remove(card_b)
-            print(f"Player B plays: {card_b}")
+            logger.info(f"Player B plays: {card_b}")
+            round_data['plays'].append({
+                'player': 'B',
+                'card': card_b
+            })
             
             # Resolve round
             winner = engine.resolve_round([card_a, card_b])
-            print(f"Round winner: Player {'A' if winner == 0 else 'B'}")
+            logger.info(f"Round winner: Player {'A' if winner == 0 else 'B'}")
+            round_data['winner'] = 'A' if winner == 0 else 'B'
+            hand_data['rounds'].append(round_data)
             
             # Check for hand winner
             hand_winner = engine.check_hand_winner()
             if hand_winner is not None:
                 engine.award_hand_points(hand_winner)
-                print(f"\nHand winner: Player {'A' if hand_winner == 0 else 'B'}")
-                print(f"Team A score: {engine.scores[0]}")
-                print(f"Team B score: {engine.scores[1]}")
+                logger.info(f"\nHand winner: Player {'A' if hand_winner == 0 else 'B'}")
+                logger.info(f"Team A score: {engine.scores[0]}")
+                logger.info(f"Team B score: {engine.scores[1]}")
+                
+                hand_data['winner'] = 'A' if hand_winner == 0 else 'B'
+                hand_data['final_scores'] = {
+                    'A': engine.scores[0],
+                    'B': engine.scores[1]
+                }
+                match_history['rounds'].append(hand_data)
                 break
     
-    print("\nGame complete!")
-    print(f"Team A score: {engine.scores[0]}")
-    print(f"Team B score: {engine.scores[1]}")
-    print(f"Winner: Team {'A' if engine.scores[0] >= 12 else 'B'}")
+    logger.info("\n=== Game Complete! ===")
+    logger.info(f"Team A score: {engine.scores[0]}")
+    logger.info(f"Team B score: {engine.scores[1]}")
+    logger.info(f"Winner: Team {'A' if engine.scores[0] >= 12 else 'B'}")
+    
+    # Save final scores and winner
+    match_history['final_scores'] = {
+        'A': engine.scores[0],
+        'B': engine.scores[1]
+    }
+    match_history['winner'] = 'A' if engine.scores[0] >= 12 else 'B'
+    
+    # Save match history
+    save_match_history(match_history)
 
 if __name__ == '__main__':
     play_match()
