@@ -20,6 +20,8 @@ class TrucoPaulistaEngine:
         self.pending_bet_response = None
         self.last_bet_action = None
         self.skip_round = False
+        self.bet_accepted = False   # <<-- ADD THIS LINE
+        self.bet_accepted = False   # <<-- ADD THIS LINE
         
     def new_match(self):
         """Initialize a new match with shuffled deck and dealt cards"""
@@ -146,6 +148,8 @@ class TrucoPaulistaEngine:
         
     def check_hand_winner(self):
         """Check if there's a winner for the current hand"""
+        if self.bet_accepted and self.round_winners:
+            return self.round_winners[0]   # Immediately decide hand winner from first round
         if len(self.round_winners) < 2:
             return None
             
@@ -192,6 +196,7 @@ class TrucoPaulistaEngine:
         elif action['action'] == 'accept':
             self.current_bet = self.bet_stack[-1]['value']
             self.betting_complete = True
+            self.bet_accepted = True   # <<-- ADD THIS LINE
         elif action['action'] == 'run':
             self.run_from_bet(player_idx)
             self.betting_complete = True
