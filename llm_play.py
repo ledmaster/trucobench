@@ -10,6 +10,11 @@ logger = setup_logger()
 
 def format_game_state(engine, player_cards, player_num):
     """Format game state for LLM consumption"""
+    # Calculate if there's a pending bet to respond to
+    pending_bet = None
+    if engine.bet_stack and engine.bet_stack[-1]['team'] != player_num:
+        pending_bet = engine.bet_stack[-1]['type']
+
     return {
         'my_cards': player_cards,
         'vira': engine.vira,
@@ -17,7 +22,8 @@ def format_game_state(engine, player_cards, player_num):
         'my_score': engine.scores[player_num],
         'opponent_score': engine.scores[1 - player_num],
         'current_bet': engine.current_bet,
-        'bet_history': engine.bet_stack
+        'bet_history': engine.bet_stack,
+        'pending_bet': pending_bet
     }
 
 class TrucoPlayer:
@@ -25,7 +31,14 @@ class TrucoPlayer:
         self.name = name
         
     def decide_move(self, game_state):
-        rules = """Você é um jogador de Truco Paulista. Regras do jogo:
+        rules = """Você é um jogador de Truco Paulista. 
+
+IMPORTANTE: Se houver uma aposta pendente (pending_bet não é None), você DEVE responder com uma das ações:
+- 'accept' para aceitar
+- 'run' para correr
+- 'bet' com o próximo valor para aumentar
+
+Regras do jogo:
 
 O Truco é disputado em mãos. Cada mão vale inicialmente 1 ponto, e ganha o jogo quem fizer 12 pontos. 
 Cada jogador recebe três cartas por mão.
@@ -191,11 +204,38 @@ def play_match():
                     })
                     bet_result = engine.handle_bet(move_a['bet_type'], 0)
                     
-                    # Get player B's response
+                    # Get player B's response to the bet
                     state_b = format_game_state(engine, player_b_cards, 1)
                     move_b = player_b.decide_move(state_b)
                     
-                    if move_b['action'] == 'accept':
+                    if move_b['action'] == 'bet':
+                        logger.info(f"Player B raises to: {move_b['bet_type']}")
+                        round_data['betting'].append({
+                            'player': 'B',
+                            'bet': move_b['bet_type']
+                        })
+                        bet_result = engine.handle_bet(move_b['bet_type'], 1)
+                        
+                        # Get player A's response to the raise
+                        state_a = format_game_state(engine, player_a_cards, 0)
+                        move_a = player_a.decide_move(state_a)
+                        
+                        if move_a['action'] == 'accept':
+                            logger.info("Player A accepts the raise")
+                            round_data['betting'].append({
+                                'player': 'A',
+                                'action': 'accept'
+                            })
+                            break
+                        elif move_a['action'] == 'run':
+                            logger.info("Player A runs - Player B wins the hand")
+                            engine.run_from_bet(0)
+                            round_data['betting'].append({
+                                'player': 'A',
+                                'action': 'run'
+                            })
+                            return
+                    elif move_b['action'] == 'accept':
                         logger.info("Player B accepts the bet")
                         round_data['betting'].append({
                             'player': 'B',
