@@ -222,10 +222,6 @@ def play_match():
     while not engine.game_finished:
         engine.new_match()
         
-        # Get player hands
-        player_a_cards = engine.player_hands[0].copy()
-        player_b_cards = engine.player_hands[1].copy()
-        
         logger.info("\n=== New Hand ===")
         hand_data = {
             'vira': engine.vira,
@@ -256,7 +252,7 @@ def play_match():
             while not betting_complete:
                 # Get current player's state and decision
                 state = format_game_state(engine, 
-                                        player_a_cards if current_player == 0 else player_b_cards,
+                                        engine.player_hands[current_player],
                                         current_player)
                 bet = (player_a if current_player == 0 else player_b).decide_bet(state)
                 player_name = 'A' if current_player == 0 else 'B'
@@ -300,7 +296,10 @@ def play_match():
                         'action': 'run'
                     })
                     engine.run_from_bet(current_player)
-                    return
+                    hand_data['rounds'].append(round_data)
+                    match_history['rounds'].append(hand_data)
+                    save_match_history(match_history)
+                    break  # Exit betting loop and hand processing
                 
             # Card playing phase
             # Player A's turn
@@ -309,7 +308,7 @@ def play_match():
             logger.info(f"Player B cards before play: {player_b_cards}")
             play_a = player_a.decide_play(state_a)
             card_a = tuple(play_a['card'])  # Convert list to tuple
-            player_a_cards.remove(card_a)
+            engine.play_card(0, card_a)
             logger.info(f"Player A plays: {card_a}")
             round_data['plays'].append({
                 'player': 'A',
@@ -322,7 +321,7 @@ def play_match():
             logger.info(f"Player B cards before B's play: {player_b_cards}")
             play_b = player_b.decide_play(state_b)
             card_b = tuple(play_b['card'])  # Convert list to tuple
-            player_b_cards.remove(card_b)
+            engine.play_card(1, card_b)
             logger.info(f"Player B plays: {card_b}")
             round_data['plays'].append({
                 'player': 'B',

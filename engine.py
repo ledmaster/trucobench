@@ -18,6 +18,7 @@ class TrucoPaulistaEngine:
         
     def new_match(self):
         """Initialize a new match with shuffled deck and dealt cards"""
+        self.round_winners = []  # Reset round winners
         self._create_deck()
         random.shuffle(self.deck)
         
@@ -160,3 +161,10 @@ class TrucoPaulistaEngine:
         # Check if game is finished
         if self.scores[winning_team] >= 12:
             self.game_finished = True
+            
+    def play_card(self, player_idx, card):
+        """Play a card from a player's hand"""
+        if card in self.player_hands[player_idx]:
+            self.player_hands[player_idx].remove(card)
+        else:
+            raise ValueError("Card not in player's hand")
