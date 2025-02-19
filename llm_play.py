@@ -252,45 +252,49 @@ def play_match():
             # Betting phase
             betting_complete = False
             while not betting_complete:
-                # Get player A's decision
+                # Get player A's betting decision
                 state_a = format_game_state(engine, player_a_cards, 0)
                 logger.info(f"Player A cards: {player_a_cards}")
                 logger.info(f"Player B cards: {player_b_cards}")
                 logger.info(f"Game state A: {state_a}")
-                move_a = player_a.decide_move(state_a)
+                bet_a = player_a.decide_bet(state_a)
+            
+                if bet_a is None:
+                    betting_complete = True
+                    continue
                 
-                if move_a['action'] == 'bet':
-                    logger.info(f"Player A bets: {move_a['bet_type']}")
+                if bet_a['action'] == 'bet':
+                    logger.info(f"Player A bets: {bet_a['bet_type']}")
                     round_data['betting'].append({
                         'player': 'A',
-                        'bet': move_a['bet_type']
+                        'bet': bet_a['bet_type']
                     })
-                    bet_result = engine.handle_bet(move_a['bet_type'], 0)
-                    
+                    bet_result = engine.handle_bet(bet_a['bet_type'], 0)
+                
                     # Get player B's response to the bet
                     state_b = format_game_state(engine, player_b_cards, 1)
-                    move_b = player_b.decide_move(state_b)
-                    
-                    if move_b['action'] == 'bet':
-                        logger.info(f"Player B raises to: {move_b['bet_type']}")
+                    bet_b = player_b.decide_bet(state_b)
+                
+                    if bet_b and bet_b['action'] == 'bet':
+                        logger.info(f"Player B raises to: {bet_b['bet_type']}")
                         round_data['betting'].append({
                             'player': 'B',
-                            'bet': move_b['bet_type']
+                            'bet': bet_b['bet_type']
                         })
-                        bet_result = engine.handle_bet(move_b['bet_type'], 1)
-                        
+                        bet_result = engine.handle_bet(bet_b['bet_type'], 1)
+                    
                         # Get player A's response to the raise
                         state_a = format_game_state(engine, player_a_cards, 0)
-                        move_a = player_a.decide_move(state_a)
-                        
-                        if move_a['action'] == 'accept':
+                        bet_a = player_a.decide_bet(state_a)
+                    
+                        if bet_a and bet_a['action'] == 'accept':
                             logger.info("Player A accepts the raise")
                             round_data['betting'].append({
                                 'player': 'A',
                                 'action': 'accept'
                             })
-                            break
-                        elif move_a['action'] == 'run':
+                            betting_complete = True
+                        elif bet_a and bet_a['action'] == 'run':
                             logger.info("Player A runs - Player B wins the hand")
                             engine.run_from_bet(0)
                             round_data['betting'].append({
@@ -298,14 +302,14 @@ def play_match():
                                 'action': 'run'
                             })
                             return
-                    elif move_b['action'] == 'accept':
+                    elif bet_b and bet_b['action'] == 'accept':
                         logger.info("Player B accepts the bet")
                         round_data['betting'].append({
                             'player': 'B',
                             'action': 'accept'
                         })
                         betting_complete = True
-                    else:  # Player B runs
+                    elif bet_b and bet_b['action'] == 'run':
                         logger.info("Player B runs - Player A wins the hand")
                         round_data['betting'].append({
                             'player': 'B',
@@ -313,16 +317,14 @@ def play_match():
                         })
                         engine.run_from_bet(1)
                         return
-                else:
-                    betting_complete = True  # No bet, proceed to card play
                 
             # Card playing phase
             # Player A's turn
             state_a = format_game_state(engine, player_a_cards, 0)
             logger.info(f"Player A cards before play: {player_a_cards}")
             logger.info(f"Player B cards before play: {player_b_cards}")
-            move_a = player_a.decide_move(state_a)
-            card_a = tuple(move_a['card'])  # Convert list to tuple
+            play_a = player_a.decide_play(state_a)
+            card_a = tuple(play_a['card'])  # Convert list to tuple
             player_a_cards.remove(card_a)
             logger.info(f"Player A plays: {card_a}")
             round_data['plays'].append({
@@ -334,8 +336,8 @@ def play_match():
             state_b = format_game_state(engine, player_b_cards, 1)
             logger.info(f"Player A cards before B's play: {player_a_cards}")
             logger.info(f"Player B cards before B's play: {player_b_cards}")
-            move_b = player_b.decide_move(state_b)
-            card_b = tuple(move_b['card'])  # Convert list to tuple
+            play_b = player_b.decide_play(state_b)
+            card_b = tuple(play_b['card'])  # Convert list to tuple
             player_b_cards.remove(card_b)
             logger.info(f"Player B plays: {card_b}")
             round_data['plays'].append({
