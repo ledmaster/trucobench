@@ -13,6 +13,8 @@ class TrucoPaulistaEngine:
         self.player_hands = {0: [], 1: []}  # Cards for each player
         self.bet_stack = []
         self.current_bet = 1
+        self.round_winners = []  # Track winners of each round in the hand
+        self.game_finished = False
         
     def new_match(self):
         """Initialize a new match with shuffled deck and dealt cards"""
@@ -78,7 +80,9 @@ class TrucoPaulistaEngine:
         if len(played_cards) != 2:
             raise ValueError("Need exactly 2 played cards")
             
-        return 0 if self._compare_cards(played_cards[0], played_cards[1]) else 1
+        winner = 0 if self._compare_cards(played_cards[0], played_cards[1]) else 1
+        self.round_winners.append(winner)
+        return winner
         
     def handle_bet(self, bet_type, team):
         """Handle betting (truco/six/nine/twelve)"""
@@ -92,13 +96,67 @@ class TrucoPaulistaEngine:
         if bet_type not in bet_values:
             raise ValueError("Invalid bet type")
             
+        # Validate bet sequence
+        if self.bet_stack:
+            last_bet = self.bet_stack[-1]['type']
+            valid_sequence = {
+                'truco': ['six'],
+                'six': ['nine'],
+                'nine': ['twelve'],
+                'twelve': []
+            }
+            if bet_type not in valid_sequence[last_bet]:
+                raise ValueError("Invalid bet sequence")
+            
         self.bet_stack.append({
             'type': bet_type,
             'value': bet_values[bet_type],
             'team': team
         })
+        self.current_bet = bet_values[bet_type]
         
         return {
             'current_bet': bet_values[bet_type],
             'responding_team': (team + 1) % 2
         }
+        
+    def run_from_bet(self, running_team):
+        """Handle when a team runs from a bet"""
+        if not self.bet_stack:
+            raise ValueError("No active bet to run from")
+            
+        # Points go to the team that made the last bet
+        last_bet = self.bet_stack[-1]
+        scoring_team = last_bet['team']
+        
+        # Calculate points based on previous bet
+        if len(self.bet_stack) == 1:  # Running from truco
+            self.scores[scoring_team] += 1
+        else:
+            prev_bet = self.bet_stack[-2]
+            self.scores[scoring_team] += prev_bet['value']
+            
+        return True
+        
+    def check_hand_winner(self):
+        """Check if there's a winner for the current hand"""
+        if len(self.round_winners) < 2:
+            return None
+            
+        # Count wins for each team
+        team_wins = [self.round_winners.count(0), self.round_winners.count(1)]
+        
+        # Need 2 wins to win the hand
+        if team_wins[0] >= 2:
+            return 0
+        elif team_wins[1] >= 2:
+            return 1
+        return None
+        
+    def award_hand_points(self, winning_team):
+        """Award points for winning a hand"""
+        self.scores[winning_team] += self.current_bet
+        
+        # Check if game is finished
+        if self.scores[winning_team] >= 12:
+            self.game_finished = True

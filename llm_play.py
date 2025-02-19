@@ -42,14 +42,15 @@ def playerB(game_state):
 def play_match():
     """Play a single match between two LLM players"""
     engine = TrucoPaulistaEngine()
-    engine.new_match()
     
-    # Get player hands
-    player_a_cards = engine.player_hands[0]
-    player_b_cards = engine.player_hands[1]
-    
-    # Play three rounds
-    for round_num in range(3):
+    while not engine.game_finished:
+        engine.new_match()
+        
+        # Get player hands
+        player_a_cards = engine.player_hands[0].copy()
+        player_b_cards = engine.player_hands[1].copy()
+        
+        print("\nNew Hand")
         print(f"\nRound {round_num + 1}")
         print(f"Vira: {engine.vira}")
         print(f"Manilhas: {engine.manilhas}")
@@ -95,10 +96,20 @@ def play_match():
         # Resolve round
         winner = engine.resolve_round([card_a, card_b])
         print(f"Round winner: Player {'A' if winner == 0 else 'B'}")
+        
+        # Check for hand winner
+        hand_winner = engine.check_hand_winner()
+        if hand_winner is not None:
+            engine.award_hand_points(hand_winner)
+            print(f"\nHand winner: Player {'A' if hand_winner == 0 else 'B'}")
+            print(f"Team A score: {engine.scores[0]}")
+            print(f"Team B score: {engine.scores[1]}")
+            break
     
-    print("\nMatch complete!")
+    print("\nGame complete!")
     print(f"Team A score: {engine.scores[0]}")
     print(f"Team B score: {engine.scores[1]}")
+    print(f"Winner: Team {'A' if engine.scores[0] >= 12 else 'B'}")
 
 if __name__ == '__main__':
     play_match()
