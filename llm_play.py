@@ -66,12 +66,12 @@ Manilhas (da mais forte para mais fraca):
 Qual sua próxima jogada? Você deve retornar um dicionário Python com uma das seguintes estruturas:
 
 1. Para jogar uma carta:
-   {'action': 'play', 'card': ('rank', 'suit')}
-   Exemplo: {'action': 'play', 'card': ('K', 'P')}
+   {"action": "play", "card": ["rank", "suit"]}
+   Exemplo: {"action": "play", "card": ["K", "P"]}
 
 2. Para pedir truco/aumentar aposta:
-   {'action': 'bet', 'bet_type': 'truco'/'six'/'nine'/'twelve'}
-   Exemplo: {'action': 'bet', 'bet_type': 'truco'}
+   {"action": "bet", "bet_type": "truco/six/nine/twelve"}
+   Exemplo: {"action": "bet", "bet_type": "truco"}
 
 3. Para aceitar uma aposta:
    {'action': 'accept'}
