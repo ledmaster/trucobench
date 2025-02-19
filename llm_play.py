@@ -260,7 +260,39 @@ def play_match():
                 bet_a = player_a.decide_bet(state_a)
             
                 if bet_a is None:
-                    betting_complete = True
+                    # Even if A doesn't bet, B should get a chance
+                    state_b = format_game_state(engine, player_b_cards, 1)
+                    bet_b = player_b.decide_bet(state_b)
+                    
+                    if bet_b and bet_b['action'] == 'bet':
+                        logger.info(f"Player B bets: {bet_b['bet_type']}")
+                        round_data['betting'].append({
+                            'player': 'B',
+                            'bet': bet_b['bet_type']
+                        })
+                        bet_result = engine.handle_bet(bet_b['bet_type'], 1)
+                        
+                        # Get player A's response to B's bet
+                        state_a = format_game_state(engine, player_a_cards, 0)
+                        bet_a = player_a.decide_bet(state_a)
+                        
+                        if bet_a and bet_a['action'] == 'accept':
+                            logger.info("Player A accepts the bet")
+                            round_data['betting'].append({
+                                'player': 'A',
+                                'action': 'accept'
+                            })
+                            betting_complete = True
+                        elif bet_a and bet_a['action'] == 'run':
+                            logger.info("Player A runs - Player B wins the hand")
+                            round_data['betting'].append({
+                                'player': 'A',
+                                'action': 'run'
+                            })
+                            engine.run_from_bet(0)
+                            return
+                    else:
+                        betting_complete = True
                     continue
                 
                 if bet_a['action'] == 'bet':
