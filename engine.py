@@ -80,8 +80,14 @@ class TrucoEngine:
         if card2_manilha_idx >= 0:
             return False
             
-        # Neither is manilha, compare by rank
-        return self.RANKS.index(card1[0]) > self.RANKS.index(card2[0])
+        # Neither is manilha, compare by rank; if equal, use suit as a tiebreaker.
+        rank1 = self.RANKS.index(card1[0])
+        rank2 = self.RANKS.index(card2[0])
+        if rank1 == rank2:
+            # Compare suits based on defined strength: Paus > Copas > Espadas > Ouros.
+            return self.SUITS.index(card1[1]) < self.SUITS.index(card2[1])
+        else:
+            return rank1 > rank2
         
     def resolve_round(self, played_cards):
         """Resolve a round with played cards, returns winning team index"""
