@@ -9,6 +9,7 @@ from match_logger import setup_logger, save_match_history
 
 # Setup logger
 logger = setup_logger()
+#logger.propagate = False
 
 def format_game_state(engine, player_cards, player_num):
     """Format game state for LLM consumption"""
@@ -84,7 +85,7 @@ Estado atual do jogo:
 Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das seguintes estruturas:
 
 1. Para não fazer aposta:
-   None
+   {{'action': 'pass'}}
 
 2. Para pedir truco/aumentar aposta:
    {{"action": "bet", "bet_type": "truco/six/nine/twelve"}}
@@ -107,9 +108,6 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
             
             content = response.choices[0].message.content
             print(content)
-            
-            if "None" in content or "none" in content.lower():
-                return None
                 
             # Look for content between ```python and ``` or just {...}
             match = re.search(r'```python\s*({.*?})\s*```|({.*?})', content, re.DOTALL)
@@ -248,7 +246,8 @@ def play_match():
             # Betting phase
             current_player = 0  # Start with player A
             betting_complete = False
-            
+            skip_round = False
+
             while not betting_complete:
                 # Get current player's state and decision
                 state = format_game_state(engine, 
@@ -258,7 +257,7 @@ def play_match():
                 player_name = 'A' if current_player == 0 else 'B'
                 
                 # If player doesn't bet
-                if bet is None:
+                if bet['action'] == 'pass':
                     # Track that this player passed
                     round_data['betting'].append({
                         'player': player_name,
@@ -270,9 +269,7 @@ def play_match():
                     passed_count = sum(1 for b in round_data['betting'] if b['action'] == 'pass')
                     if passed_count == 2:
                         betting_complete = True
-                
-                # Handle bet actions
-                if bet['action'] == 'bet':
+                elif bet['action'] == 'bet':
                     logger.info(f"Player {player_name} bets: {bet['bet_type']}")
                     round_data['betting'].append({
                         'player': player_name,
@@ -299,8 +296,11 @@ def play_match():
                     hand_data['rounds'].append(round_data)
                     match_history['rounds'].append(hand_data)
                     save_match_history(match_history)
+                    skip_round = True
                     break  # Exit betting loop and hand processing
-                
+            
+            if skip_round:
+                continue
             # Card playing phase
             # Player A's turn
             state_a = format_game_state(engine, engine.player_hands[0], 0)
