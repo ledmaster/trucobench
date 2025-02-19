@@ -14,40 +14,45 @@ def format_game_state(engine, player_cards, player_num):
         'bet_history': engine.bet_stack
     }
 
-def playerA(game_state):
-
-    messages = [{"role": "system", "content": "Você está jogando Truco contra outro LLM"}]
-
-    response = completion(model='openai/gpt-4o-mini',
-                          messages=messages)
-
-    """Simulated LLM Player A decision"""
-    # For now, simple strategy: bet truco 20% of the time
-    if random.random() < 0.2 and game_state['current_bet'] == 1:
+class TrucoPlayer:
+    def __init__(self, name, strategy="aggressive"):
+        self.name = name
+        self.strategy = strategy
+        
+    def decide_move(self, game_state):
+        """Make a decision based on game state and strategy"""
+        messages = [{"role": "system", "content": f"Você é o jogador {self.name} jogando Truco"}]
+        
+        response = completion(model='openai/gpt-4o-mini',
+                            messages=messages)
+        
+        if self.strategy == "aggressive":
+            # Bet truco 20% of the time
+            if random.random() < 0.2 and game_state['current_bet'] == 1:
+                return {
+                    'action': 'bet',
+                    'bet_type': 'truco'
+                }
+        elif self.strategy == "conservative":
+            # Always accept bets, never initiate
+            if game_state['current_bet'] > 1:
+                return {
+                    'action': 'accept'
+                }
+                
+        # Default action: play first card
         return {
-            'action': 'bet',
-            'bet_type': 'truco'
+            'action': 'play',
+            'card': game_state['my_cards'][0]
         }
-    return {
-        'action': 'play',
-        'card': game_state['my_cards'][0]
-    }
-
-def playerB(game_state):
-    """Simulated LLM Player B decision"""
-    # For now, simple strategy: always accept bets, never initiate
-    if game_state['current_bet'] > 1:
-        return {
-            'action': 'accept'
-        }
-    return {
-        'action': 'play',
-        'card': game_state['my_cards'][0]
-    }
 
 def play_match():
     """Play a single match between two LLM players"""
     engine = TrucoPaulistaEngine()
+    
+    # Create players with different strategies
+    player_a = TrucoPlayer("A", strategy="aggressive")
+    player_b = TrucoPlayer("B", strategy="conservative")
     
     while not engine.game_finished:
         engine.new_match()
@@ -68,7 +73,7 @@ def play_match():
         while True:
             # Get player A's decision
             state_a = format_game_state(engine, player_a_cards, 0)
-            move_a = playerA(state_a)
+            move_a = player_a.decide_move(state_a)
             
             if move_a['action'] == 'bet':
                 print(f"Player A bets: {move_a['bet_type']}")
@@ -76,7 +81,7 @@ def play_match():
                 
                 # Get player B's response
                 state_b = format_game_state(engine, player_b_cards, 1)
-                move_b = playerB(state_b)
+                move_b = player_b.decide_move(state_b)
                 
                 if move_b['action'] == 'accept':
                     print("Player B accepts the bet")
@@ -90,14 +95,14 @@ def play_match():
         # Card playing phase
         # Player A's turn
         state_a = format_game_state(engine, player_a_cards, 0)
-        move_a = playerA(state_a)
+        move_a = player_a.decide_move(state_a)
         card_a = move_a['card']
         player_a_cards.remove(card_a)
         print(f"Player A plays: {card_a}")
         
         # Player B's turn
         state_b = format_game_state(engine, player_b_cards, 1)
-        move_b = playerB(state_b)
+        move_b = player_b.decide_move(state_b)
         card_b = move_b['card']
         player_b_cards.remove(card_b)
         print(f"Player B plays: {card_b}")
