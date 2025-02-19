@@ -8,10 +8,10 @@ class TestTrucoPaulistaEngine(unittest.TestCase):
     def test_initial_state(self):
         """Test initial game state"""
         self.assertEqual(len(self.engine.teams), 2)
-        self.assertEqual(self.engine.teams[0]['score'], 0)
-        self.assertEqual(self.engine.teams[1]['score'], 0)
-        self.assertEqual(self.engine.teams[0]['players'], [1])
-        self.assertEqual(self.engine.teams[1]['players'], [2])
+        self.assertEqual(self.engine.scores[0], 0)
+        self.assertEqual(self.engine.scores[1], 0)
+        self.assertEqual(self.engine.teams[0], [1])
+        self.assertEqual(self.engine.teams[1], [2])
 
     def test_new_match_deck_setup(self):
         """Test deck initialization for a new match"""

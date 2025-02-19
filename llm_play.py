@@ -6,8 +6,8 @@ def format_game_state(engine, player_cards, player_num):
         'my_cards': player_cards,
         'vira': engine.vira,
         'manilhas': engine.manilhas,
-        'my_score': engine.teams[player_num]['score'],
-        'opponent_score': engine.teams[1 - player_num]['score'],
+        'my_score': engine.scores[player_num],
+        'opponent_score': engine.scores[1 - player_num],
         'current_bet': engine.current_bet,
         'bet_history': engine.bet_stack
     }
@@ -62,8 +62,8 @@ def play_match():
         print(f"Round winner: Player {'A' if winner == 0 else 'B'}")
     
     print("\nMatch complete!")
-    print(f"Team A score: {engine.teams[0]['score']}")
-    print(f"Team B score: {engine.teams[1]['score']}")
+    print(f"Team A score: {engine.scores[0]}")
+    print(f"Team B score: {engine.scores[1]}")
 
 if __name__ == '__main__':
     play_match()

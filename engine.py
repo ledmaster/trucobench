@@ -5,7 +5,8 @@ class TrucoPaulistaEngine:
     SUITS = ['P', 'C', 'E', 'O']  # Paus, Copas, Espadas, Ouros
     
     def __init__(self):
-        self.teams = [{'score': 0, 'players': [1]}, {'score': 0, 'players': [2]}]
+        self.scores = [0, 0]  # Team scores by index
+        self.teams = [[1], [2]]  # Team players by index
         self.deck = []
         self.vira = None
         self.manilhas = []
