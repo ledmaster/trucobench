@@ -259,11 +259,15 @@ def play_match():
                 continue
             # Card playing phase
             # Player A's turn
-            state_a = format_game_state(engine, engine.player_hands[0], 0)
-            print(f"Player A cards before play: {engine.player_hands[0]}")
-            print(f"Player B cards before play: {engine.player_hands[1]}")
-            play_a = player_a.decide_play(state_a)
-            card_a = tuple(play_a['card'])  # Convert list to tuple
+            if len(engine.player_hands[0]) == 1:
+                card_a = tuple(engine.player_hands[0][0])
+                print(f"Last round: automatically playing the only remaining card for Player A: {card_a}")
+            else:
+                state_a = format_game_state(engine, engine.player_hands[0], 0)
+                print(f"Player A cards before play: {engine.player_hands[0]}")
+                print(f"Player B cards before play: {engine.player_hands[1]}")
+                play_a = player_a.decide_play(state_a)
+                card_a = tuple(play_a['card'])
             engine.play_card(0, card_a)
             print(f"Player A plays: {card_a}")
             round_data['plays'].append({
@@ -272,11 +276,15 @@ def play_match():
             })
             
             # Player B's turn
-            state_b = format_game_state(engine, engine.player_hands[1], 1)
-            print(f"Player A cards before B's play: {engine.player_hands[0]}")
-            print(f"Player B cards before B's play: {engine.player_hands[1]}")
-            play_b = player_b.decide_play(state_b)
-            card_b = tuple(play_b['card'])  # Convert list to tuple
+            if len(engine.player_hands[1]) == 1:
+                card_b = tuple(engine.player_hands[1][0])
+                print(f"Last round: automatically playing the only remaining card for Player B: {card_b}")
+            else:
+                state_b = format_game_state(engine, engine.player_hands[1], 1)
+                print(f"Player A cards before B's play: {engine.player_hands[0]}")
+                print(f"Player B cards before B's play: {engine.player_hands[1]}")
+                play_b = player_b.decide_play(state_b)
+                card_b = tuple(play_b['card'])
             engine.play_card(1, card_b)
             print(f"Player B plays: {card_b}")
             round_data['plays'].append({
