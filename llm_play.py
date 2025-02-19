@@ -88,10 +88,19 @@ Qual sua próxima jogada? Você deve retornar um dicionário Python com uma das 
             response = completion(model='openai/gpt-4o-mini',
                                 messages=messages)
             
-            # Parse the response into a valid action dictionary
-            # Expected format: {'action': 'play/bet/accept/run', ...other params}
-            print(response.choices[0].message.content)
-            action = eval(response.choices[0].message.content)
+            # Parse the response using regex to find the dictionary
+            import re
+            content = response.choices[0].message.content
+            print(content)
+            
+            # Look for content between ```python and ``` or just {...}
+            match = re.search(r'```python\s*({.*?})\s*```|({.*?})', content, re.DOTALL)
+            if not match:
+                raise ValueError("No valid dictionary found in response")
+                
+            # Use the first group that matched (either inside ``` or standalone)
+            dict_str = match.group(1) or match.group(2)
+            action = eval(dict_str)
             
             
             # Validate the action has required fields
