@@ -15,6 +15,12 @@ def format_game_state(engine, player_cards, player_num):
     }
 
 def playerA(game_state):
+
+    messages = [{"role": "system", "content": "Você está jogando Truco contra outro LLM"}]
+
+    response = completion(model='openai/gpt-4o-mini',
+                          messages=messages)
+
     """Simulated LLM Player A decision"""
     # For now, simple strategy: bet truco 20% of the time
     if random.random() < 0.2 and game_state['current_bet'] == 1:
