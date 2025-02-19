@@ -57,11 +57,14 @@ def play_match():
         player_b_cards = engine.player_hands[1].copy()
         
         print("\nNew Hand")
-        print(f"\nRound {round_num + 1}")
-        print(f"Vira: {engine.vira}")
-        print(f"Manilhas: {engine.manilhas}")
         
-        # Betting phase
+        # Play up to 3 rounds per hand
+        for round_num in range(3):
+            print(f"\nRound {round_num + 1}")
+            print(f"Vira: {engine.vira}")
+            print(f"Manilhas: {engine.manilhas}")
+            
+            # Betting phase
         while True:
             # Get player A's decision
             state_a = format_game_state(engine, player_a_cards, 0)
