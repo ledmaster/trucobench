@@ -206,7 +206,21 @@ class TrucoPaulistaEngine:
                 self.current_betting_player = 1 - self.current_betting_player
                 if self.current_betting_player == 0:  # Both passed
                     self.betting_complete = True
-            
+
+    def run_betting_phase(self, get_bet_action):
+        self.start_betting_phase()
+        bet_actions = []
+        while not self.betting_complete:
+            current_player = self.current_betting_player
+            action = get_bet_action(current_player)
+            try:
+                self.handle_player_bet_action(action, current_player)
+            except Exception:
+                action = {'action': 'pass'}
+                self.handle_player_bet_action(action, current_player)
+            bet_actions.append((current_player, action))
+        return bet_actions
+
     def play_card(self, player_idx, card):
         """Play a card from a player's hand"""
         if card in self.player_hands[player_idx]:

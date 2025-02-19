@@ -236,33 +236,22 @@ def play_match():
                 'plays': []
             }
             
-            # Initialize betting phase
-            engine.start_betting_phase()
-
-            # Betting phase
-            while not engine.betting_complete:
-                current_player = engine.current_betting_player
-                player = player_a if current_player == 0 else player_b
-                state = format_game_state(engine, 
-                        engine.player_hands[current_player],
-                        current_player)
-                
-                bet_action = player.decide_bet(state)
-                player_name = 'A' if current_player == 0 else 'B'
-                
+            def get_bet_action(player_idx):
+                player = player_a if player_idx == 0 else player_b
+                state = format_game_state(engine, engine.player_hands[player_idx], player_idx)
                 try:
-                    engine.handle_player_bet_action(bet_action, current_player)
-                except Exception as e:
-                    print(f"Error processing bet: {e}")
-                    # Fallback to passing
-                    engine.handle_player_bet_action({'action': 'pass'}, current_player)
-
-                # Record the action
+                    return player.decide_bet(state) or {'action': 'pass'}
+                except:
+                    return {'action': 'pass'}
+    
+            bet_results = engine.run_betting_phase(get_bet_action)
+            for (p_idx, action) in bet_results:
+                player_name = 'A' if p_idx == 0 else 'B'
                 round_data['betting'].append({
                     'player': player_name,
-                    'action': bet_action.get('action', 'error')
+                    'action': action.get('action', 'error')
                 })
-
+    
             if engine.skip_round:
                 continue
             # Card playing phase
