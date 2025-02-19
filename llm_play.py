@@ -263,10 +263,16 @@ def play_match():
                 
                 # If player doesn't bet
                 if bet is None:
+                    # Track that this player passed
+                    round_data['betting'].append({
+                        'player': player_name,
+                        'action': 'pass'
+                    })
                     # Switch to other player
                     current_player = 1 - current_player
-                    # If both players passed, end betting
-                    if len(round_data['betting']) == 0:
+                    # Only end betting if both players have passed
+                    passed_count = sum(1 for b in round_data['betting'] if b['action'] == 'pass')
+                    if passed_count == 2:
                         betting_complete = True
                     continue
                 
