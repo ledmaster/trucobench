@@ -2,6 +2,7 @@ from datetime import datetime
 import random
 from engine import TrucoPaulistaEngine
 from litellm import completion
+from match_logger import save_match_history
 import re
 
 def format_game_state(engine, player_cards, player_num):
@@ -328,7 +329,7 @@ def play_match():
     match_history['winner'] = 'A' if engine.scores[0] >= 12 else 'B'
     
     # Save match history
-    #save_match_history(match_history)
+    save_match_history(match_history)
 
 if __name__ == '__main__':
     play_match()
