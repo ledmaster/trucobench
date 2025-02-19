@@ -58,26 +58,26 @@ Força das cartas (da mais fraca para mais forte):
 4 < 5 < 6 < 7 < Q < J < K < A < 2 < 3 < Manilhas
 
 Manilhas (da mais forte para mais fraca):
-- Manilha de Paus (mais forte)
-- Manilha de Copas
-- Manilha de Espadas
-- Manilha de Ouros (mais fraca)
+- Manilha de Paus (mais forte) - P
+- Manilha de Copas - C
+- Manilha de Espadas - E
+- Manilha de Ouros (mais fraca) - O
 
 Qual sua próxima jogada? Você deve retornar um dicionário Python com uma das seguintes estruturas:
 
 1. Para jogar uma carta:
-   {"action": "play", "card": ["rank", "suit"]}
-   Exemplo: {"action": "play", "card": ["K", "P"]}
+   {{"action": "play", "card": ["rank", "suit"]}}
+   Exemplo: {{"action": "play", "card": ["K", "P"]}}
 
 2. Para pedir truco/aumentar aposta:
-   {"action": "bet", "bet_type": "truco/six/nine/twelve"}
-   Exemplo: {"action": "bet", "bet_type": "truco"}
+   {{"action": "bet", "bet_type": "truco/six/nine/twelve"}}
+   Exemplo: {{"action": "bet", "bet_type": "truco"}}
 
 3. Para aceitar uma aposta:
-   {'action': 'accept'}
+   {{'action': 'accept'}}
 
 4. Para correr de uma aposta:
-   {'action': 'run'}"""
+   {{'action': 'run'}}"""
 
         messages = [
             {"role": "system", "content": rules},
@@ -90,7 +90,9 @@ Qual sua próxima jogada? Você deve retornar um dicionário Python com uma das 
             
             # Parse the response into a valid action dictionary
             # Expected format: {'action': 'play/bet/accept/run', ...other params}
+            print(response.choices[0].message.content)
             action = eval(response.choices[0].message.content)
+            
             
             # Validate the action has required fields
             if 'action' not in action:
@@ -136,55 +138,56 @@ def play_match():
             print(f"Manilhas: {engine.manilhas}")
             
             # Betting phase
-        while True:
-            # Get player A's decision
+            while True:
+                # Get player A's decision
+                state_a = format_game_state(engine, player_a_cards, 0)
+                print(state_a)
+                move_a = player_a.decide_move(state_a)
+                
+                if move_a['action'] == 'bet':
+                    print(f"Player A bets: {move_a['bet_type']}")
+                    bet_result = engine.handle_bet(move_a['bet_type'], 0)
+                    
+                    # Get player B's response
+                    state_b = format_game_state(engine, player_b_cards, 1)
+                    move_b = player_b.decide_move(state_b)
+                    
+                    if move_b['action'] == 'accept':
+                        print("Player B accepts the bet")
+                        break
+                    else:
+                        print("Player B runs - Player A wins the hand")
+                        continue
+                else:
+                    break  # No bet, proceed to card play
+                
+            # Card playing phase
+            # Player A's turn
             state_a = format_game_state(engine, player_a_cards, 0)
             move_a = player_a.decide_move(state_a)
+            card_a = move_a['card']
+            player_a_cards.remove(card_a)
+            print(f"Player A plays: {card_a}")
             
-            if move_a['action'] == 'bet':
-                print(f"Player A bets: {move_a['bet_type']}")
-                bet_result = engine.handle_bet(move_a['bet_type'], 0)
-                
-                # Get player B's response
-                state_b = format_game_state(engine, player_b_cards, 1)
-                move_b = player_b.decide_move(state_b)
-                
-                if move_b['action'] == 'accept':
-                    print("Player B accepts the bet")
-                    break
-                else:
-                    print("Player B runs - Player A wins the hand")
-                    continue
-            else:
-                break  # No bet, proceed to card play
-                
-        # Card playing phase
-        # Player A's turn
-        state_a = format_game_state(engine, player_a_cards, 0)
-        move_a = player_a.decide_move(state_a)
-        card_a = move_a['card']
-        player_a_cards.remove(card_a)
-        print(f"Player A plays: {card_a}")
-        
-        # Player B's turn
-        state_b = format_game_state(engine, player_b_cards, 1)
-        move_b = player_b.decide_move(state_b)
-        card_b = move_b['card']
-        player_b_cards.remove(card_b)
-        print(f"Player B plays: {card_b}")
-        
-        # Resolve round
-        winner = engine.resolve_round([card_a, card_b])
-        print(f"Round winner: Player {'A' if winner == 0 else 'B'}")
-        
-        # Check for hand winner
-        hand_winner = engine.check_hand_winner()
-        if hand_winner is not None:
-            engine.award_hand_points(hand_winner)
-            print(f"\nHand winner: Player {'A' if hand_winner == 0 else 'B'}")
-            print(f"Team A score: {engine.scores[0]}")
-            print(f"Team B score: {engine.scores[1]}")
-            break
+            # Player B's turn
+            state_b = format_game_state(engine, player_b_cards, 1)
+            move_b = player_b.decide_move(state_b)
+            card_b = move_b['card']
+            player_b_cards.remove(card_b)
+            print(f"Player B plays: {card_b}")
+            
+            # Resolve round
+            winner = engine.resolve_round([card_a, card_b])
+            print(f"Round winner: Player {'A' if winner == 0 else 'B'}")
+            
+            # Check for hand winner
+            hand_winner = engine.check_hand_winner()
+            if hand_winner is not None:
+                engine.award_hand_points(hand_winner)
+                print(f"\nHand winner: Player {'A' if hand_winner == 0 else 'B'}")
+                print(f"Team A score: {engine.scores[0]}")
+                print(f"Team B score: {engine.scores[1]}")
+                break
     
     print("\nGame complete!")
     print(f"Team A score: {engine.scores[0]}")
