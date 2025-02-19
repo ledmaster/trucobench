@@ -218,7 +218,7 @@ def play_match():
             logger.info(f"Player A cards before play: {player_a_cards}")
             logger.info(f"Player B cards before play: {player_b_cards}")
             move_a = player_a.decide_move(state_a)
-            card_a = move_a['card']
+            card_a = tuple(move_a['card'])  # Convert list to tuple
             player_a_cards.remove(card_a)
             logger.info(f"Player A plays: {card_a}")
             round_data['plays'].append({
@@ -231,7 +231,7 @@ def play_match():
             logger.info(f"Player A cards before B's play: {player_a_cards}")
             logger.info(f"Player B cards before B's play: {player_b_cards}")
             move_b = player_b.decide_move(state_b)
-            card_b = move_b['card']
+            card_b = tuple(move_b['card'])  # Convert list to tuple
             player_b_cards.remove(card_b)
             logger.info(f"Player B plays: {card_b}")
             round_data['plays'].append({
