@@ -1,5 +1,6 @@
 import random
 from engine import TrucoPaulistaEngine
+from litellm import completion
 
 def format_game_state(engine, player_cards, player_num):
     """Format game state for LLM consumption"""
