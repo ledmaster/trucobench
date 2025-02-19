@@ -10,8 +10,8 @@ class TestTrucoPaulistaEngine(unittest.TestCase):
         self.assertEqual(len(self.engine.teams), 2)
         self.assertEqual(self.engine.teams[0]['score'], 0)
         self.assertEqual(self.engine.teams[1]['score'], 0)
-        self.assertEqual(self.engine.teams[0]['players'], [1, 3])
-        self.assertEqual(self.engine.teams[1]['players'], [2, 4])
+        self.assertEqual(self.engine.teams[0]['players'], [1])
+        self.assertEqual(self.engine.teams[1]['players'], [2])
 
     def test_new_match_deck_setup(self):
         """Test deck initialization for a new match"""
@@ -21,7 +21,7 @@ class TestTrucoPaulistaEngine(unittest.TestCase):
         # Check if vira was set
         self.assertIsNotNone(self.engine.vira)
         # Each player should have 3 cards
-        self.assertEqual(len(self.engine.current_hand), 12)  # 4 players * 3 cards
+        self.assertEqual(len(self.engine.current_hand), 6)  # 2 players * 3 cards
 
     def test_manilha_rules(self):
         """Test manilha determination based on vira"""

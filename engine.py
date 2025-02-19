@@ -1,6 +1,6 @@
 class TrucoPaulistaEngine:
     def __init__(self):
-        self.teams = [{'score': 0, 'players': [1, 3]}, {'score': 0, 'players': [2, 4]}]
+        self.teams = [{'score': 0, 'players': [1]}, {'score': 0, 'players': [2]}]
         self.deck = []
         self.vira = None
         self.manilhas = []
