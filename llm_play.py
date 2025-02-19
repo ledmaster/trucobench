@@ -3,13 +3,14 @@ import random
 from engine import TrucoPaulistaEngine
 from litellm import completion
 import logging
-#logging.getLogger('litellm').setLevel(logging.ERROR)
+logging.getLogger('litellm').setLevel(logging.ERROR)
+logging.getLogger('litellm').propagate = False
 import re
 from match_logger import setup_logger, save_match_history
 
 # Setup logger
 logger = setup_logger()
-#logger.propagate = False
+logger.propagate = False
 
 def format_game_state(engine, player_cards, player_num):
     """Format game state for LLM consumption"""
