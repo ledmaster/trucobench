@@ -3,6 +3,7 @@ from engine import TrucoPaulistaEngine
 from litellm import completion
 import re
 from match_logger import setup_logger, save_match_history
+from datetime import datetime
 
 # Setup logger
 logger = setup_logger()
