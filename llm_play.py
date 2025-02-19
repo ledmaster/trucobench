@@ -165,12 +165,13 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
             {"role": "user", "content": state_info}
         ]
         
+        print(state_info)
         try:
             response = completion(model='openai/gpt-4o-mini',
                                 messages=messages)
             
             content = response.choices[0].message.content
-            print(content)
+            #print(content)
             
             # Look for content between ```python and ``` or just {...}
             match = re.search(r'```python\s*({.*?})\s*```|({.*?})', content, re.DOTALL)
@@ -297,7 +298,6 @@ def play_match():
             print(f"Round winner: Player {'A' if winner == 0 else 'B'}")
             round_data['winner'] = 'A' if winner == 0 else 'B'
             hand_data['rounds'].append(round_data)
-            #print(f"Scores {engine.scores}")
             
             # Check for hand winner
             hand_winner = engine.check_hand_winner()
