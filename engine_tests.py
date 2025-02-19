@@ -16,8 +16,8 @@ class TestTrucoPaulistaEngine(unittest.TestCase):
     def test_new_match_deck_setup(self):
         """Test deck initialization for a new match"""
         self.engine.new_match()
-        # Should have 40 cards (no 8,9,10,jokers)
-        self.assertEqual(len(self.engine.deck), 40)
+        # Should have 33 cards (40 initial - 6 dealt - 1 vira)
+        self.assertEqual(len(self.engine.deck), 33)
         # Check if vira was set
         self.assertIsNotNone(self.engine.vira)
         # Each player should have 3 cards
