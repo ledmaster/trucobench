@@ -190,7 +190,8 @@ def play_match():
             }
             
             # Betting phase
-            while True:
+            betting_complete = False
+            while not betting_complete:
                 # Get player A's decision
                 state_a = format_game_state(engine, player_a_cards, 0)
                 logger.info(f"Player A cards: {player_a_cards}")
@@ -243,16 +244,17 @@ def play_match():
                             'player': 'B',
                             'action': 'accept'
                         })
-                        break
-                    else:
+                        betting_complete = True
+                    else:  # Player B runs
                         logger.info("Player B runs - Player A wins the hand")
                         round_data['betting'].append({
                             'player': 'B',
                             'action': 'run'
                         })
-                        continue
+                        engine.run_from_bet(1)
+                        return
                 else:
-                    break  # No bet, proceed to card play
+                    betting_complete = True  # No bet, proceed to card play
                 
             # Card playing phase
             # Player A's turn
