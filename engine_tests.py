@@ -148,5 +148,39 @@ class TestTrucoPaulistaEngine(unittest.TestCase):
         scoring_team = self.engine.bet_stack[-1]['team']
         self.assertEqual(self.engine.scores[scoring_team], initial_scores[scoring_team] + 6)
 
+    def test_run_betting_phase_pass(self):
+        engine = TrucoPaulistaEngine()
+        actions = [{'action': 'pass'}, {'action': 'pass'}]
+        def get_bet_action(player_idx):
+            return actions.pop(0)
+        result = engine.run_betting_phase(get_bet_action)
+        self.assertTrue(engine.betting_complete)
+        self.assertEqual(engine.current_bet, 1)  # Default bet remains unchanged
+        self.assertEqual(len(engine.bet_stack), 0)
+        self.assertEqual(result, [(0, {'action': 'pass'}), (1, {'action': 'pass'})])
+
+    def test_run_betting_phase_truco_accept(self):
+        engine = TrucoPaulistaEngine()
+        actions = [{'action': 'bet', 'bet_type': 'truco'}, {'action': 'accept'}]
+        def get_bet_action(player_idx):
+            return actions.pop(0)
+        result = engine.run_betting_phase(get_bet_action)
+        self.assertTrue(engine.betting_complete)
+        self.assertEqual(engine.current_bet, 3)
+        self.assertEqual(len(engine.bet_stack), 1)
+        self.assertEqual(result, [(0, {'action': 'bet', 'bet_type': 'truco'}), (1, {'action': 'accept'})])
+
+    def test_run_betting_phase_run(self):
+        engine = TrucoPaulistaEngine()
+        actions = [{'action': 'bet', 'bet_type': 'truco'}, {'action': 'run'}]
+        initial_scores = engine.scores.copy()
+        def get_bet_action(player_idx):
+            return actions.pop(0)
+        result = engine.run_betting_phase(get_bet_action)
+        self.assertTrue(engine.betting_complete)
+        self.assertTrue(engine.skip_round)
+        scoring_team = engine.bet_stack[-1]['team']
+        self.assertEqual(engine.scores[scoring_team], initial_scores[scoring_team] + 1)
+
 if __name__ == '__main__':
     unittest.main()
