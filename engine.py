@@ -1,6 +1,6 @@
 import random
 
-class TrucoPaulistaEngine:
+class TrucoEngine:
     RANKS = ['4', '5', '6', '7', 'Q', 'J', 'K', 'A', '2', '3']
     SUITS = ['P', 'C', 'E', 'O']  # Paus, Copas, Espadas, Ouros
     
@@ -148,8 +148,6 @@ class TrucoPaulistaEngine:
         
     def check_hand_winner(self):
         """Check if there's a winner for the current hand"""
-        if self.bet_accepted and self.round_winners:
-            return self.round_winners[0]   # Immediately decide hand winner from first round
         if len(self.round_winners) < 2:
             return None
             
