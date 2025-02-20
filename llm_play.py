@@ -1,6 +1,8 @@
 from datetime import datetime
+from pathlib import Path
 import random
 from engine import TrucoEngine
+from human_readable_match import format_match_events
 from litellm import completion, completion_cost
 from match_events import MatchEventLogger
 import re
@@ -378,6 +380,15 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
         winner='A' if engine.scores[0] >= 12 else 'B',
         costs={'A': player_a.total_cost, 'B': player_b.total_cost}
     )
+    
+    # Save human readable match output
+    match_history_dir = Path("match_history")
+    match_history_dir.mkdir(exist_ok=True)
+    
+    readable_output = format_match_events(event_logger.events)
+    readable_file = match_history_dir / f"match_{event_logger.timestamp}.txt"
+    with open(readable_file, "w", encoding="utf-8") as f:
+        f.write(readable_output)
 
 if __name__ == '__main__':
     NUM_MATCHES = 1  # Set the number of matches to run in parallel
