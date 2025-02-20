@@ -44,7 +44,7 @@ class TrucoPlayer:
 
 IMPORTANTE: Se houver uma aposta pendente (pending_bet não é None), você DEVE responder com uma das ações:
 - 'accept' para aceitar
-- 'run' para correr
+- 'run' para correr (apenas se houver uma aposta pendente)
 - 'bet' com o próximo valor para aumentar
 
 Se não houver aposta pendente, você pode:

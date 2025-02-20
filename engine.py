@@ -135,8 +135,8 @@ class TrucoEngine:
         
     def run_from_bet(self, running_team):
         """Handle when a team runs from a bet"""
-        if not self.bet_stack:
-            raise ValueError("No active bet to run from")
+        if not self.bet_stack or not self.pending_bet_response:
+            raise ValueError("Cannot run - no pending bet to respond to")
             
         # Points go to the team that made the last bet
         last_bet = self.bet_stack[-1]
