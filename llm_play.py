@@ -370,7 +370,7 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
                     break
                 break
     
-    print(f"\n=== Game Complete! ===\nTeam {match_history['model_A']} score: {engine.scores[0]} - Team {match_history['model_B']} score: {engine.scores[1]}\nWinner: Team {'A' if engine.scores[0] >= 12 else 'B'}")
+    print(f"\n=== Game Complete! ===\nTeam {player_a.model} score: {engine.scores[0]} - Team {player_b.model} score: {engine.scores[1]}\nWinner: Team {'A' if engine.scores[0] >= 12 else 'B'}")
     
     # Log match end
     event_logger.log_match_end(
