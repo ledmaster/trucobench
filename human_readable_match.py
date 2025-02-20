@@ -83,6 +83,13 @@ def format_match_history(match_data):
     output.append("-----------------------------------")
     output.append(f"🏁 **Match Final Scores:** {overall_score_str}")
     output.append(f"🏆 **Match Winner:** Player {overall_winner} 🏆")
+    
+    # Add LLM cost details if present in match_data
+    llm_costs = match_data.get("llm_costs")
+    if llm_costs is not None:
+        cost_str = f"Player A: ${float(llm_costs.get('A', 0)):.10f}, Player B: ${float(llm_costs.get('B', 0)):.10f}"
+        output.append(f"💸 **LLM Costs:** {cost_str}")
+    
     output.append("-----------------------------------")
     
     return "\n".join(output)
