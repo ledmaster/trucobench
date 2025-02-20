@@ -6,6 +6,7 @@ from match_logger import save_match_history
 import re
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import sys
 
 class LLMResponseError(Exception):
     pass
@@ -392,7 +393,8 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
 
 if __name__ == '__main__':
     NUM_MATCHES = 4  # Set the number of matches to run in parallel
-    with ThreadPoolExecutor(max_workers=NUM_MATCHES) as executor:
+    executor = ThreadPoolExecutor(max_workers=NUM_MATCHES)
+    try:
         futures = [
             executor.submit(
                 play_match,
@@ -402,7 +404,11 @@ if __name__ == '__main__':
             for _ in range(NUM_MATCHES)
         ]
         for future in as_completed(futures):
-            try:
-                future.result()
-            except Exception as e:
-                print(f"Match execution error: {e}")
+            future.result()
+    except KeyboardInterrupt:
+        print("\nKeyboardInterrupt received: canceling pending matches and shutting down...")
+        for future in futures:
+            future.cancel()
+        sys.exit(0)
+    finally:
+        executor.shutdown(wait=False)
