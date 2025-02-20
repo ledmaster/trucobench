@@ -79,8 +79,15 @@ def format_match_history(match_data):
         
         # Explain why hand ended early if less than 3 tricks
         if len(trick_rounds) < 3:
-            if hand.get("hand_ended_by_run"):
-                output.append("⚠️ **Hand ended early:** Player ran from bet")
+            # Check if any trick has a betting sequence that ended in 'run'
+            ran_during_trick = any(
+                any(b['action'] == 'run' for b in trick.get('betting', []))
+                for trick in trick_rounds
+            )
+            if ran_during_trick:
+                output.append("⚠️ **Hand ended early:** Player ran during trick betting")
+            elif hand.get("hand_ended_by_run"):
+                output.append("⚠️ **Hand ended early:** Player ran from initial bet")
             else:
                 # Must have been because someone won first 2 tricks
                 output.append("⚠️ **Hand ended early:** Player won first 2 tricks")
