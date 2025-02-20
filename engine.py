@@ -242,27 +242,26 @@ class TrucoEngine:
         self.start_betting_phase()
         bet_actions = []
         
-        # First player's action
-        current_player = self.current_betting_player
-        action = get_bet_action(current_player)
-        try:
-            self.handle_player_bet_action(action, current_player)
-        except Exception:
-            action = {'action': 'pass'}
-            self.handle_player_bet_action(action, current_player)
-        bet_actions.append((current_player, action))
-        
-        # If betting isn't complete and we need second player's action
-        if not self.betting_complete and self.current_betting_player != current_player:
+        while not self.betting_complete:
             current_player = self.current_betting_player
             action = get_bet_action(current_player)
+            
             try:
                 self.handle_player_bet_action(action, current_player)
             except Exception:
                 action = {'action': 'pass'}
                 self.handle_player_bet_action(action, current_player)
+                
             bet_actions.append((current_player, action))
             
+            # If a bet was made, we need to get response from other player
+            if action['action'] == 'bet':
+                continue
+                
+            # If both players passed, or one accepted/ran from a bet, we're done
+            if self.betting_complete:
+                break
+                
         return bet_actions
 
     def play_card(self, player_idx, card):
