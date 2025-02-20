@@ -89,14 +89,15 @@ def format_match_events(events):
             
             # Show betting phase if any bets were made
             if current_round["betting"]:
-                output.append("Betting phase:")
+                output.append("Round betting:")
                 action_emojis = {"bet": "💰", "pass": "➡️", "accept": "✅", "run": "🏃"}
                 for bet in current_round["betting"]:
                     emoji = action_emojis.get(bet['action'], '')
                     output.append(f"  • Player {bet['player']} chooses to {bet['action']} {emoji}")
             
-            # Show card plays
-            output.append("Cards played:")
+            # Show card plays if any
+            if current_round["plays"]:
+                output.append("Round plays:")
             for play in current_round["plays"]:
                 output.append(f"  • Player {play['player']} plays {format_card(play['card'])}")
             
@@ -107,18 +108,6 @@ def format_match_events(events):
             current_round = {"betting": [], "plays": []}
             
         elif event_type == "hand_end":
-            output.append("\n📊 Betting Phase Summary:")
-            # Find the betting actions for this hand
-            betting_actions = [e for e in events if e["type"] == "betting_action" and 
-                             e["timestamp"] <= event["timestamp"] and
-                             (not current_hand or e["timestamp"] >= event["timestamp"])]
-            
-            # Show the betting sequence
-            for bet in betting_actions[-2:]:  # Show last 2 actions that led to hand end
-                player = bet["data"]["player"]
-                action = bet["data"]["action"]
-                output.append(f"  • Player {player} chose to {action}")
-            
             output.append("\n🔚 Hand Complete!")
             output.append(f"🏆 Player {data['winner']} wins the hand")
             output.append("Current match score:")
