@@ -116,11 +116,11 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
             
             cost = completion_cost(completion_response=response)
             formatted_cost = f"${float(cost):.10f}"
-            print(formatted_cost)
+            #print(formatted_cost)
             self.total_cost += float(cost)
             
             content = response.choices[0].message.content
-            print(content)
+            #print(content)
                 
             # Look for content between ```python and ``` or just {...}
             match = re.search(r'```python\s*({.*?})\s*```|({.*?})', content, re.DOTALL)
@@ -200,10 +200,10 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
             
             cost = completion_cost(completion_response=response)
             formatted_cost = f"${float(cost):.10f}"
-            print(formatted_cost)
+            #print(formatted_cost)
             
             content = response.choices[0].message.content
-            print(content)
+            #print(content)
             
             # Look for content between ```python and ``` or just {...}
             match = re.search(r'```python\s*({.*?})\s*```|({.*?})', content, re.DOTALL)
@@ -252,7 +252,7 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
     while not engine.game_finished:
         engine.new_hand()
         
-        print("\n=== New Hand ===")
+        #print("\n=== New Hand ===")
         # Log hand start
         event_logger.log_hand_start(
             engine.vira,
@@ -265,9 +265,9 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
         
         # Play up to 3 rounds per hand
         for round_num in range(3):
-            print(f"\n--- Round {round_num + 1} ---")
-            print(f"Vira: {engine.vira}")
-            print(f"Manilhas: {engine.manilhas}")
+            #print(f"\n--- Round {round_num + 1} ---")
+            #print(f"Vira: {engine.vira}")
+            #print(f"Manilhas: {engine.manilhas}")
             if engine.game_finished:
                 break
             
@@ -313,7 +313,7 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
             # Player A's turn
             if len(engine.player_hands[0]) == 1:
                 card_a = tuple(engine.player_hands[0][0])
-                print(f"Last round: automatically playing the only remaining card for Player A: {card_a}")
+                #print(f"Last round: automatically playing the only remaining card for Player A: {card_a}")
             else:
                 try:
                     state_a = format_game_state(engine, engine.player_hands[0], 0)
@@ -324,14 +324,14 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
                     engine.scores[1] = 12
                     engine.game_finished = True
                     return
-                print(f"Player A plays: {card_a}")
+                #print(f"Player A plays: {card_a}")
                 engine.play_card(0, card_a)
             event_logger.log_card_play('A', card_a)
             
             # Player B's turn
             if len(engine.player_hands[1]) == 1:
                 card_b = tuple(engine.player_hands[1][0])
-                print(f"Last round: automatically playing the only remaining card for Player B: {card_b}")
+                #print(f"Last round: automatically playing the only remaining card for Player B: {card_b}")
             else:
                 try:
                     state_b = format_game_state(engine, engine.player_hands[1], 1)
@@ -342,27 +342,27 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
                     engine.scores[0] = 12
                     engine.game_finished = True
                     return
-                print(f"Player B plays: {card_b}")
+                #print(f"Player B plays: {card_b}")
                 engine.play_card(1, card_b)
             event_logger.log_card_play('B', card_b)
             
             # Log remaining cards after plays
-            print(f"Player A remaining cards: {engine.player_hands[0]}")
-            print(f"Player B remaining cards: {engine.player_hands[1]}")
+            #print(f"Player A remaining cards: {engine.player_hands[0]}")
+            #print(f"Player B remaining cards: {engine.player_hands[1]}")
             
             
             # Resolve round
             winner = engine.resolve_round([card_a, card_b])
-            print(f"Round winner: Player {'A' if winner == 0 else 'B'}")
+            #print(f"Round winner: Player {'A' if winner == 0 else 'B'}")
             event_logger.log_round_end(round_num + 1, 'A' if winner == 0 else 'B')
             
             # Check for hand winner
             hand_winner = engine.check_hand_winner()
             if hand_winner is not None:
                 engine.award_hand_points(hand_winner)
-                print(f"\nHand winner: Player {'A' if hand_winner == 0 else 'B'}")
-                print(f"Team A score: {engine.scores[0]}")
-                print(f"Team B score: {engine.scores[1]}")
+                #print(f"\nHand winner: Player {'A' if hand_winner == 0 else 'B'}")
+                #print(f"Team A score: {engine.scores[0]}")
+                #print(f"Team B score: {engine.scores[1]}")
                 
                 event_logger.log_hand_end(
                     winner='A' if hand_winner == 0 else 'B',
