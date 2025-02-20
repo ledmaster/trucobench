@@ -111,7 +111,6 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
             formatted_cost = f"${float(cost):.10f}"
             print(formatted_cost)
             self.total_cost += float(cost)
-            self.total_cost += float(cost)
             
             content = response.choices[0].message.content
             print(content)
@@ -223,15 +222,13 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
                 print(content)
             raise LLMResponseError(f"Error parsing LLM response in decide_play for player {self.name}: {e}")
 
-def play_match():
+def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
     """Play a single match between two LLM players"""
     engine = TrucoEngine()
     
-
-    
     # Create players with different strategies
-    player_a = TrucoPlayer("A")
-    player_b = TrucoPlayer("B")
+    player_a = TrucoPlayer("A", model=model_A)
+    player_b = TrucoPlayer("B", model=model_B)
 
     # Initialize match history
     match_history = {
