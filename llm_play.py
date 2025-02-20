@@ -1,7 +1,7 @@
 from datetime import datetime
 import random
 from engine import TrucoEngine
-from litellm import completion
+from litellm import completion, completion_cost
 from match_logger import save_match_history
 import re
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
@@ -104,7 +104,11 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
         
         try:
             response = completion(model=self.model,
-                                messages=messages)
+                                  messages=messages)
+            
+            cost = completion_cost(completion_response=response)
+            formatted_cost = f"${float(cost):.10f}"
+            print(formatted_cost)
             
             content = response.choices[0].message.content
             print(content)
@@ -182,7 +186,11 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
         #print(state_info)
         try:
             response = completion(model=self.model,
-                                messages=messages)
+                                  messages=messages)
+            
+            cost = completion_cost(completion_response=response)
+            formatted_cost = f"${float(cost):.10f}"
+            print(formatted_cost)
             
             content = response.choices[0].message.content
             #print(content)
