@@ -4,6 +4,7 @@ from engine import TrucoEngine
 from litellm import completion
 from match_logger import save_match_history
 import re
+from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
 
 class LLMResponseError(Exception):
     pass
@@ -31,6 +32,7 @@ class TrucoPlayer:
         self.name = name
         self.model = model
         
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(0.5), retry=retry_if_exception_type(LLMResponseError))
     def decide_bet(self, game_state):
         """Decide whether to make/respond to a bet"""
         rules = """Você é um jogador de Truco tomando uma decisão sobre apostas.
@@ -135,6 +137,7 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
                 print(content)
             raise LLMResponseError(f"Error parsing LLM response in decide_bet for player {self.name}: {e}")
             
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(0.5), retry=retry_if_exception_type(LLMResponseError))
     def decide_play(self, game_state):
         """Decide which card to play"""
         rules = """Você é um jogador de Truco decidindo qual carta jogar.
