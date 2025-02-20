@@ -38,7 +38,7 @@ IMPORTANTE: Se houver uma aposta pendente (pending_bet não é None), você DEVE
 - 'bet' com o próximo valor para aumentar
 
 Se não houver aposta pendente, você pode:
-- Retornar None para não fazer aposta
+- Retornar 'pass' para não fazer aposta
 - Fazer uma aposta com 'bet' e o tipo de aposta
 
 Regras de apostas:
@@ -202,16 +202,20 @@ def play_match():
     """Play a single match between two LLM players"""
     engine = TrucoEngine()
     
-    # Initialize match history
-    match_history = {
-        'rounds': [],
-        'final_scores': {'A': 0, 'B': 0},
-        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    }
+
     
     # Create players with different strategies
     player_a = TrucoPlayer("A")
     player_b = TrucoPlayer("B")
+
+    # Initialize match history
+    match_history = {
+        'model_A': player_a.model,
+        'model_B': player_b.model,
+        'rounds': [],
+        'final_scores': {'A': 0, 'B': 0},
+        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
     
     while not engine.game_finished:
         engine.new_match()
