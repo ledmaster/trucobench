@@ -142,8 +142,14 @@ class TrucoEngine:
         last_bet = self.bet_stack[-1]
         scoring_team = last_bet['team']
         
-        # Award points based on the current bet value
-        self.scores[scoring_team] += self.current_bet
+        # If there's a previous bet in the stack, use its value
+        if len(self.bet_stack) > 1:
+            points = self.bet_stack[-2]['value']
+        else:
+            points = 1  # No previous bet, award 1 point
+            
+        # Award points to the team that made the last bet
+        self.scores[scoring_team] += points
         
         if self.scores[scoring_team] >= 12:
             self.game_finished = True
