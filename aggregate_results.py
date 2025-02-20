@@ -18,8 +18,9 @@ def aggregate_results(match_dir='match_history'):
         return
 
     # Regex patterns to extract needed info from the match file:
-    model_a_pattern = r"🤖 Player A Model:\s*(.+)"
-    model_b_pattern = r"🤖 Player B Model:\s*(.+)"
+    model_a_pattern = r"🤖 Player A Model: (.+)"
+    model_b_pattern = r"🤖 Player B Model: (.+)"
+    scores_pattern = r"🏁 \*\*Match Final Scores:\*\* Player A: (\d+), Player B: (\d+)"
     winner_pattern = r"🏆 \*\*Match Winner:\*\* Player ([AB])"
     cost_pattern = r"💸 \*\*LLM Costs:\*\* Player A: \$([0-9.]+), Player B: \$([0-9.]+)"
 
@@ -36,11 +37,14 @@ def aggregate_results(match_dir='match_history'):
         model_a = m_a.group(1).strip()
         model_b = m_b.group(1).strip()
 
-        # Extract match winner (A or B)
+        # Extract final scores and winner
+        m_scores = re.search(scores_pattern, content)
         m_winner = re.search(winner_pattern, content)
-        if not m_winner:
-            print(f"Match winner not found in file {file}. Skipping.")
+        if not m_scores or not m_winner:
+            print(f"Match scores/winner not found in file {file}. Skipping.")
             continue
+        score_a = int(m_scores.group(1))
+        score_b = int(m_scores.group(2))
         winner = m_winner.group(1).strip()
 
         # Extract LLM costs for both players
