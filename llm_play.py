@@ -31,6 +31,7 @@ class TrucoPlayer:
     def __init__(self, name, model='openai/gpt-4o-mini'):
         self.name = name
         self.model = model
+        self.total_cost = 0.0
         
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(0.5), retry=retry_if_exception_type(LLMResponseError))
     def decide_bet(self, game_state):
@@ -109,6 +110,8 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
             cost = completion_cost(completion_response=response)
             formatted_cost = f"${float(cost):.10f}"
             print(formatted_cost)
+            self.total_cost += float(cost)
+            self.total_cost += float(cost)
             
             content = response.choices[0].message.content
             print(content)
@@ -385,6 +388,7 @@ def play_match():
     }
     match_history['winner'] = 'A' if engine.scores[0] >= 12 else 'B'
     
+    match_history['llm_costs'] = {'A': player_a.total_cost, 'B': player_b.total_cost}
     # Save match history
     save_match_history(match_history)
 
