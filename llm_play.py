@@ -8,13 +8,7 @@ from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_t
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import sys
 
-# Lista de modelos disponíveis (deve ter pelo menos 2)
-available_models = [
-    'openai/gpt-4o-mini-2024-07-18',
-    'openai/o3-mini-2025-01-31',
-    # Adicione outros modelos se desejar, por exemplo:
-    'openai/another-model'
-]
+
 
 class LLMResponseError(Exception):
     pass
@@ -119,11 +113,11 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
             
             cost = completion_cost(completion_response=response)
             formatted_cost = f"${float(cost):.10f}"
-            print(formatted_cost)
+            #print(formatted_cost)
             self.total_cost += float(cost)
             
             content = response.choices[0].message.content
-            print(content)
+            #print(content)
                 
             # Look for content between ```python and ``` or just {...}
             match = re.search(r'```python\s*({.*?})\s*```|({.*?})', content, re.DOTALL)
@@ -202,7 +196,7 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
             
             cost = completion_cost(completion_response=response)
             formatted_cost = f"${float(cost):.10f}"
-            print(formatted_cost)
+            #print(formatted_cost)
             
             content = response.choices[0].message.content
             #print(content)
@@ -254,11 +248,13 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
         'final_scores': {'A': 0, 'B': 0},
         'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
+
+    print(f"\n=== Game Started! ===\nTeam {match_history['model_A']} vs Team {match_history['model_B']}")
     
     while not engine.game_finished:
         engine.new_match()
         
-        print("\n=== New Hand ===")
+        #print("\n=== New Hand ===")
         hand_data = {
             'vira': engine.vira,
             'manilhas': engine.manilhas,
@@ -271,9 +267,9 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
         
         # Play up to 3 rounds per hand
         for round_num in range(3):
-            print(f"\n--- Round {round_num + 1} ---")
-            print(f"Vira: {engine.vira}")
-            print(f"Manilhas: {engine.manilhas}")
+            #print(f"\n--- Round {round_num + 1} ---")
+            #print(f"Vira: {engine.vira}")
+            #print(f"Manilhas: {engine.manilhas}")
             
             round_data = {
                 'round_num': round_num + 1,
@@ -321,7 +317,7 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
             # Player A's turn
             if len(engine.player_hands[0]) == 1:
                 card_a = tuple(engine.player_hands[0][0])
-                print(f"Last round: automatically playing the only remaining card for Player A: {card_a}")
+                #print(f"Last round: automatically playing the only remaining card for Player A: {card_a}")
             else:
                 try:
                     state_a = format_game_state(engine, engine.player_hands[0], 0)
@@ -332,7 +328,7 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
                     engine.scores[1] = 12
                     engine.game_finished = True
                     return
-                print(f"Player A plays: {card_a}")
+                #print(f"Player A plays: {card_a}")
                 engine.play_card(0, card_a)
             round_data['plays'].append({
                 'player': 'A',
@@ -342,7 +338,7 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
             # Player B's turn
             if len(engine.player_hands[1]) == 1:
                 card_b = tuple(engine.player_hands[1][0])
-                print(f"Last round: automatically playing the only remaining card for Player B: {card_b}")
+                #print(f"Last round: automatically playing the only remaining card for Player B: {card_b}")
             else:
                 try:
                     state_b = format_game_state(engine, engine.player_hands[1], 1)
@@ -353,7 +349,7 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
                     engine.scores[0] = 12
                     engine.game_finished = True
                     return
-                print(f"Player B plays: {card_b}")
+                #print(f"Player B plays: {card_b}")
                 engine.play_card(1, card_b)
             round_data['plays'].append({
                 'player': 'B',
@@ -361,8 +357,8 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
             })
             
             # Log remaining cards after plays
-            print(f"Player A remaining cards: {engine.player_hands[0]}")
-            print(f"Player B remaining cards: {engine.player_hands[1]}")
+            #print(f"Player A remaining cards: {engine.player_hands[0]}")
+            #print(f"Player B remaining cards: {engine.player_hands[1]}")
             
             # Save intermediate state
             hand_data['current_cards'] = {
@@ -373,7 +369,7 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
             
             # Resolve round
             winner = engine.resolve_round([card_a, card_b])
-            print(f"Round winner: Player {'A' if winner == 0 else 'B'}")
+            #print(f"Round winner: Player {'A' if winner == 0 else 'B'}")
             round_data['winner'] = 'A' if winner == 0 else 'B'
             hand_data['rounds'].append(round_data)
             
@@ -381,9 +377,9 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
             hand_winner = engine.check_hand_winner()
             if hand_winner is not None:
                 engine.award_hand_points(hand_winner)
-                print(f"\nHand winner: Player {'A' if hand_winner == 0 else 'B'}")
-                print(f"Team A score: {engine.scores[0]}")
-                print(f"Team B score: {engine.scores[1]}")
+                #print(f"\nHand winner: Player {'A' if hand_winner == 0 else 'B'}")
+                #print(f"Team A score: {engine.scores[0]}")
+                #print(f"Team B score: {engine.scores[1]}")
                 
                 hand_data['winner'] = 'A' if hand_winner == 0 else 'B'
                 hand_data['final_scores'] = {
@@ -393,10 +389,7 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
                 match_history['rounds'].append(hand_data)
                 break
     
-    print("\n=== Game Complete! ===")
-    print(f"Team A score: {engine.scores[0]}")
-    print(f"Team B score: {engine.scores[1]}")
-    print(f"Winner: Team {'A' if engine.scores[0] >= 12 else 'B'}")
+    print(f"\n=== Game Complete! ===\nTeam {match_history['model_A']} score: {engine.scores[0]} - Team {match_history['model_B']} score: {engine.scores[1]}\nWinner: Team {'A' if engine.scores[0] >= 12 else 'B'}")
     
     # Save final scores and winner
     match_history['final_scores'] = {
@@ -410,8 +403,16 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
     save_match_history(match_history)
 
 if __name__ == '__main__':
-    NUM_MATCHES = 1  # Set the number of matches to run in parallel
-    executor = ThreadPoolExecutor(max_workers=NUM_MATCHES)
+    NUM_MATCHES = 4  # Set the number of matches to run in parallel
+    # Lista de modelos disponíveis (deve ter pelo menos 2)
+    available_models = [
+        'openai/gpt-4o-mini-2024-07-18',
+        'openai/o3-mini-2025-01-31',
+        'openai/gpt-4o-2024-11-20'
+    ]
+    # openai/o1-2024-12-17
+    # 
+    executor = ThreadPoolExecutor(max_workers=8)
     try:
         futures = [
             executor.submit(
