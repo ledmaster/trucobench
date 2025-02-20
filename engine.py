@@ -20,8 +20,7 @@ class TrucoEngine:
         self.pending_bet_response = None
         self.last_bet_action = None
         self.skip_round = False
-        self.bet_accepted = False   # <<-- ADD THIS LINE
-        self.bet_accepted = False   # <<-- ADD THIS LINE
+        self.bet_accepted = False
         
     def new_hand(self):
         """Initialize a new hand: shuffle the deck, deal three cards to each player, set the single vira, and determine the manilhas"""
@@ -201,18 +200,24 @@ class TrucoEngine:
             self.current_betting_player = 1 - self.current_betting_player
             self.pending_bet_response = True
         elif action['action'] == 'accept':
-            self.current_bet = self.bet_stack[-1]['value']
+            if self.bet_stack:
+                self.current_bet = self.bet_stack[-1]['value']
+            else:
+                self.current_bet = 1  # fallback (should not occur if a bet was made)
             self.betting_complete = True
-            self.bet_accepted = True   # <<-- ADD THIS LINE
+            self.bet_accepted = True
         elif action['action'] == 'run':
             self.run_from_bet(player_idx)
             self.betting_complete = True
             self.skip_round = True
         elif action['action'] == 'pass':
             if self.pending_bet_response:
-                # Passing on a pending bet is invalid, treat as accept
-                self.current_bet = self.bet_stack[-1]['value']
+                if self.bet_stack:
+                    self.current_bet = self.bet_stack[-1]['value']
+                else:
+                    self.current_bet = 1
                 self.betting_complete = True
+                self.bet_accepted = True
             else:
                 # Both players passing means keep current bet
                 self.current_betting_player = 1 - self.current_betting_player
