@@ -108,10 +108,16 @@ def format_match_events(events):
             
         elif event_type == "hand_end":
             output.append("\n📊 Betting Phase Summary:")
-            if data.get("ended_by_run"):
-                output.append("  • Player ran from bet! Hand ended early")
-            else:
-                output.append("  • Regular betting completed")
+            # Find the betting actions for this hand
+            betting_actions = [e for e in events if e["type"] == "betting_action" and 
+                             e["timestamp"] <= event["timestamp"] and
+                             (not current_hand or e["timestamp"] >= events[events.index(current_hand)]["timestamp"])]
+            
+            # Show the betting sequence
+            for bet in betting_actions[-2:]:  # Show last 2 actions that led to hand end
+                player = bet["data"]["player"]
+                action = bet["data"]["action"]
+                output.append(f"  • Player {player} chose to {action}")
             
             output.append("\n🔚 Hand Complete!")
             output.append(f"🏆 Player {data['winner']} wins the hand")
