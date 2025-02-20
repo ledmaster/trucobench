@@ -6,6 +6,10 @@ import re
 def aggregate_results(match_dir='match_history'):
     # Aggregated results: { model: { 'wins': int, 'losses': int, 'cost': float } }
     results = {}
+    positions = {
+        'A': {'wins': 0, 'losses': 0, 'cost': 0.0},
+        'B': {'wins': 0, 'losses': 0, 'cost': 0.0}
+    }
 
     # Get all .txt files in the match history folder
     files = glob.glob(os.path.join(match_dir, '*.txt'))
@@ -61,14 +65,29 @@ def aggregate_results(match_dir='match_history'):
             results[model_a]['losses'] += 1
             results[model_b]['wins'] += 1
 
+        # Update wins/losses for player positions.
+        if winner == 'A':
+            positions['A']['wins'] += 1
+            positions['B']['losses'] += 1
+        elif winner == 'B':
+            positions['A']['losses'] += 1
+            positions['B']['wins'] += 1
+
         # Add up the LLM costs.
         results[model_a]['cost'] += cost_a
         results[model_b]['cost'] += cost_b
+
+        # Aggregate LLM costs for player positions.
+        positions['A']['cost'] += cost_a
+        positions['B']['cost'] += cost_b
 
     # Output the aggregated results.
     print("Aggregated Results:")
     for model, data in results.items():
         print(f"Model: {model}, Wins: {data['wins']}, Losses: {data['losses']}, Total Cost: ${data['cost']:.10f}")
+    print("\nAggregated Results by Player Position:")
+    for pos, data in positions.items():
+        print(f"Player {pos} - Wins: {data['wins']}, Losses: {data['losses']}, Total Cost: ${data['cost']:.10f}")
 
 if __name__ == '__main__':
     aggregate_results()
