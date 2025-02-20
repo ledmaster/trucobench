@@ -2,7 +2,7 @@ from datetime import datetime
 import random
 from engine import TrucoEngine
 from litellm import completion, completion_cost
-from match_logger import save_match_history
+from match_events import MatchEventLogger
 import re
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -242,30 +242,24 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
     player_a = TrucoPlayer("A", model=model_A)
     player_b = TrucoPlayer("B", model=model_B)
 
-    # Initialize match history
-    match_history = {
-        'model_A': player_a.model,
-        'model_B': player_b.model,
-        'rounds': [],
-        'final_scores': {'A': 0, 'B': 0},
-        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    }
+    # Initialize event logger
+    event_logger = MatchEventLogger(player_a.model, player_b.model)
 
-    print(f"\n=== Game Started! ===\nTeam {match_history['model_A']} vs Team {match_history['model_B']}")
+    print(f"\n=== Game Started! ===\nTeam {player_a.model} vs Team {player_b.model}")
     
     while not engine.game_finished:
         engine.new_hand()
         
         print("\n=== New Hand ===")
-        hand_data = {
-            'vira': engine.vira,
-            'manilhas': engine.manilhas,
-            'initial_hands': {
+        # Log hand start
+        event_logger.log_hand_start(
+            engine.vira,
+            engine.manilhas,
+            {
                 'A': engine.player_hands[0].copy(),
                 'B': engine.player_hands[1].copy()
-            },
-            'rounds': []
-        }
+            }
+        )
         
         # Play up to 3 rounds per hand
         for round_num in range(3):
@@ -275,11 +269,6 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
             if engine.game_finished:
                 break
             
-            round_data = {
-                'round_num': round_num + 1,
-                'betting': [],
-                'plays': []
-            }
             
             def get_bet_action(player_idx):
                 player = player_a if player_idx == 0 else player_b
@@ -290,10 +279,10 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
                 bet_results = engine.run_betting_phase(get_bet_action)
                 for (p_idx, action) in bet_results:
                     player_name = 'A' if p_idx == 0 else 'B'
-                    round_data['betting'].append({
-                        'player': player_name,
-                        'action': action.get('action', 'error')
-                    })
+                    event_logger.log_betting_action(
+                        player_name,
+                        action.get('action', 'error')
+                    )
             except LLMResponseError as e:
                 print(e)
                 if "A" in str(e):
@@ -309,13 +298,12 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
                 # A mão foi encerrada por um "run": a aposta não foi aceita,
                 # e os pontos devem ser os da aposta anterior (ou 1, se for o caso).
                 hand_winner = engine.bet_stack[-1]['team']  # O time que fez a última aposta
-                hand_data['winner'] = 'A' if hand_winner == 0 else 'B'
-                hand_data['hand_ended_by_run'] = True
-                hand_data['final_scores'] = {
-                    'A': engine.scores[0],
-                    'B': engine.scores[1]
-                }
-                match_history['rounds'].append(hand_data)
+                winner = 'A' if hand_winner == 0 else 'B'
+                event_logger.log_hand_end(
+                    winner=winner,
+                    scores={'A': engine.scores[0], 'B': engine.scores[1]},
+                    ended_by_run=True
+                )
                 break  # Encerra imediatamente a mão sem rodadas adicionais
             if engine.game_finished:
                 break
@@ -336,10 +324,7 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
                     return
                 print(f"Player A plays: {card_a}")
                 engine.play_card(0, card_a)
-            round_data['plays'].append({
-                'player': 'A',
-                'card': card_a
-            })
+            event_logger.log_card_play('A', card_a)
             
             # Player B's turn
             if len(engine.player_hands[1]) == 1:
@@ -357,27 +342,17 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
                     return
                 print(f"Player B plays: {card_b}")
                 engine.play_card(1, card_b)
-            round_data['plays'].append({
-                'player': 'B',
-                'card': card_b
-            })
+            event_logger.log_card_play('B', card_b)
             
             # Log remaining cards after plays
             print(f"Player A remaining cards: {engine.player_hands[0]}")
             print(f"Player B remaining cards: {engine.player_hands[1]}")
             
-            # Save intermediate state
-            hand_data['current_cards'] = {
-                'A': engine.player_hands[0].copy(),
-                'B': engine.player_hands[1].copy()
-            }
-            #save_match_history(match_history)
             
             # Resolve round
             winner = engine.resolve_round([card_a, card_b])
             print(f"Round winner: Player {'A' if winner == 0 else 'B'}")
-            round_data['winner'] = 'A' if winner == 0 else 'B'
-            hand_data['rounds'].append(round_data)
+            event_logger.log_round_end(round_num + 1, 'A' if winner == 0 else 'B')
             
             # Check for hand winner
             hand_winner = engine.check_hand_winner()
@@ -387,28 +362,22 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
                 print(f"Team A score: {engine.scores[0]}")
                 print(f"Team B score: {engine.scores[1]}")
                 
-                hand_data['winner'] = 'A' if hand_winner == 0 else 'B'
-                hand_data['final_scores'] = {
-                    'A': engine.scores[0],
-                    'B': engine.scores[1]
-                }
-                match_history['rounds'].append(hand_data)
+                event_logger.log_hand_end(
+                    winner='A' if hand_winner == 0 else 'B',
+                    scores={'A': engine.scores[0], 'B': engine.scores[1]}
+                )
                 if engine.game_finished:
                     break
                 break
     
     print(f"\n=== Game Complete! ===\nTeam {match_history['model_A']} score: {engine.scores[0]} - Team {match_history['model_B']} score: {engine.scores[1]}\nWinner: Team {'A' if engine.scores[0] >= 12 else 'B'}")
     
-    # Save final scores and winner
-    match_history['final_scores'] = {
-        'A': engine.scores[0],
-        'B': engine.scores[1]
-    }
-    match_history['winner'] = 'A' if engine.scores[0] >= 12 else 'B'
-    
-    match_history['llm_costs'] = {'A': player_a.total_cost, 'B': player_b.total_cost}
-    # Save match history
-    save_match_history(match_history)
+    # Log match end
+    event_logger.log_match_end(
+        final_scores={'A': engine.scores[0], 'B': engine.scores[1]},
+        winner='A' if engine.scores[0] >= 12 else 'B',
+        costs={'A': player_a.total_cost, 'B': player_b.total_cost}
+    )
 
 if __name__ == '__main__':
     NUM_MATCHES = 1  # Set the number of matches to run in parallel
