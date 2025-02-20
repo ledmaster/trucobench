@@ -208,7 +208,7 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
             if not match:
                 print("Invalid LLM response format in decide_play. Full response:")
                 print(content)
-                raise LLMResponseError(f"No valid dictionary found in LLM response in decide_play for player {self.name}")
+                raise LLMResponseError(f"No valid dictionary found in LLM response in decide_play for player {self.name} (model: {self.model})")
                 
             # Use the first group that matched (either inside ``` or standalone)
             dict_str = match.group(1) or match.group(2)
