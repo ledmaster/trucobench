@@ -391,6 +391,8 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
                     'B': engine.scores[1]
                 }
                 match_history['rounds'].append(hand_data)
+                if engine.game_finished:
+                    break
                 break
     
     print(f"\n=== Game Complete! ===\nTeam {match_history['model_A']} score: {engine.scores[0]} - Team {match_history['model_B']} score: {engine.scores[1]}\nWinner: Team {'A' if engine.scores[0] >= 12 else 'B'}")
