@@ -45,13 +45,15 @@ class TrucoPlayer:
         rules = """Você é um jogador de Truco tomando uma decisão sobre apostas.
 
 IMPORTANTE: Se houver uma aposta pendente (pending_bet não é None), você DEVE responder com uma das ações:
-- 'accept' para aceitar
+- 'accept' para aceitar a aposta (apenas se houver uma aposta pendente)
 - 'run' para correr (apenas se houver uma aposta pendente)
 - 'bet' com o próximo valor para aumentar
 
-Se não houver aposta pendente, você pode:
-- Retornar 'pass' para não fazer aposta
+Se não houver aposta pendente (pending_bet é None), você DEVE:
+- Retornar 'pass' para não fazer aposta, ou
 - Fazer uma aposta com 'bet' e o tipo de aposta
+
+Nota: 'accept' só é válido quando há uma aposta pendente!
 
 Regras de apostas:
 
