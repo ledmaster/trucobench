@@ -93,7 +93,7 @@ def format_match_history(match_data):
             if hand.get("hand_ended_by_run"):
                 # Player ran after the last recorded round
                 last_round = len(trick_rounds)
-                output.append(f"⚠️ **Hand ended early:** Player ran after round {last_round}")
+                output.append(f"⚠️ **Hand ended early:** Player ran on round {last_round+1}")
             elif won_first_two:
                 output.append("⚠️ **Hand ended early:** Player won first 2 tricks")
             else:
