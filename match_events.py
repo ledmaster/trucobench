@@ -5,8 +5,12 @@ from pathlib import Path
 class MatchEventLogger:
     def __init__(self, model_a, model_b):
         self.events = []
+        # Create match_events directory if it doesn't exist
+        self.match_dir = Path("match_events")
+        self.match_dir.mkdir(exist_ok=True)
+        
         self.timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        self.log_file = f"match_events_{self.timestamp}.jsonl"
+        self.log_file = self.match_dir / f"match_events_{self.timestamp}.jsonl"
         
         # Log match start
         self.log_event("match_start", {
