@@ -17,6 +17,14 @@ def main():
         file_path = os.path.join(match_history_dir, filename)
         print(file_path)
         if os.path.isfile(file_path):
+            # Determine the corresponding verification file path and skip if it exists
+            base_name, _ = os.path.splitext(filename)
+            output_filename = f"{base_name}_verification.txt"
+            output_path = os.path.join(verification_dir, output_filename)
+            if os.path.exists(output_path):
+                print(f"Verification for {filename} already exists, skipping.")
+                continue
+
             # Open and read the match file content
             with open(file_path, 'r', encoding='utf-8') as match_file:
                 match_history_text = match_file.read()
@@ -40,7 +48,6 @@ def main():
                 output_file.write(verification_output)
 
             print(f"Saved verification for {filename} to {output_filename}")
-            break
 
 if __name__ == '__main__':
     main()
