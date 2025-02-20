@@ -390,4 +390,4 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
     save_match_history(match_history)
 
 if __name__ == '__main__':
-    play_match()
+    play_match(model_A='openai/gpt-4o-mini-2024-07-18', model_B='openai/o3-mini-2025-01-31')
