@@ -1,6 +1,7 @@
 from datetime import datetime
 import json
 from pathlib import Path
+import uuid
 
 class MatchEventLogger:
     def __init__(self, model_a, model_b, unique_timestamp=True):
@@ -9,12 +10,8 @@ class MatchEventLogger:
         self.match_dir = Path("match_events")
         self.match_dir.mkdir(exist_ok=True)
         
-        base_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        if unique_timestamp:
-            # Add microseconds to ensure uniqueness in parallel matches
-            self.timestamp = f"{base_timestamp}_{datetime.now().microsecond}"
-        else:
-            self.timestamp = base_timestamp
+        # Generate unique identifier using UUID
+        self.timestamp = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
         self.log_file = self.match_dir / f"match_events_{self.timestamp}.jsonl"
         
         # Log match start
