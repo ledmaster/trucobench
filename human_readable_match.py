@@ -44,20 +44,21 @@ def format_match_events(events):
             output.append("")
             
         elif event_type == "hand_start":
-            output.append("-----------------------------------")
-            output.append(f"🃏 **Hand {hand_num}** 🃏")
+            output.append("\n====================")
+            output.append(f"🃏 Starting Hand {hand_num}")
+            output.append("====================")
             
             # Vira and Manilhas
             vira = data["vira"]
             vira_str = format_card(vira)
-            manilhas_str = ", ".join(format_card(card) for card in data["manilhas"])
-            output.append(f"**Vira:** {vira_str}    **Manilhas:** {manilhas_str}")
+            output.append(f"Dealer turns up: {vira_str}")
+            output.append(f"Manilhas for this hand: {', '.join(format_card(card) for card in data['manilhas'])}")
             
             # Initial hands
-            output.append("**Initial Hands:**")
+            output.append("\nCards dealt:")
             for player, cards in data["initial_hands"].items():
                 cards_str = ", ".join(format_card(card) for card in cards)
-                output.append(f"  Player {player}: {cards_str}")
+                output.append(f"Player {player} receives: {cards_str}")
             output.append("")
             
             current_hand = data
@@ -84,29 +85,35 @@ def format_match_events(events):
             rounds.append(current_round)
             
             # Print round details
-            output.append(f"--> **Trick {data['round_num']}:**")
-            action_emojis = {"bet": "💰", "pass": "➡️", "accept": "✅", "run": "🏃"}
-            betting_str = " | ".join(
-                f"Player {b['player']}: {b['action']} {action_emojis.get(b['action'], '')}"
-                for b in current_round["betting"]
-            )
-            output.append(f"    Betting: {betting_str}")
+            output.append(f"\n▶️ Trick {data['round_num']}:")
             
+            # Show betting phase if any bets were made
+            if current_round["betting"]:
+                output.append("Betting phase:")
+                action_emojis = {"bet": "💰", "pass": "➡️", "accept": "✅", "run": "🏃"}
+                for bet in current_round["betting"]:
+                    emoji = action_emojis.get(bet['action'], '')
+                    output.append(f"  • Player {bet['player']} chooses to {bet['action']} {emoji}")
+            
+            # Show card plays
+            output.append("Cards played:")
             for play in current_round["plays"]:
-                output.append(f"    Player {play['player']} plays: {format_card(play['card'])}")
+                output.append(f"  • Player {play['player']} plays {format_card(play['card'])}")
             
-            output.append(f"    Trick Winner: Player {data['winner']} 🎉")
+            output.append(f"👑 Player {data['winner']} wins the trick!")
             output.append("")
             
             # Reset for next round
             current_round = {"betting": [], "plays": []}
             
         elif event_type == "hand_end":
-            output.append(f"**Hand Winner:** Player {data['winner']} 🏆")
-            score_str = ", ".join(f"Player {p}: {s}" for p, s in data['scores'].items())
-            output.append(f"**Hand Final Scores:** {score_str}")
+            output.append("\n🔚 Hand Complete!")
             if data.get("ended_by_run"):
-                output.append("⚠️ **Hand ended early:** Player ran from bet")
+                output.append("⚠️ Hand ended early - Player ran from bet")
+            output.append(f"🏆 Player {data['winner']} wins the hand")
+            output.append("Current match score:")
+            for player, score in data['scores'].items():
+                output.append(f"  • Player {player}: {score} points")
             output.append("")
             
         elif event_type == "match_end":
