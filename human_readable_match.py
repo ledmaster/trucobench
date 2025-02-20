@@ -55,7 +55,7 @@ def format_match_history(match_data):
             action_emojis = {"bet": "💰", "pass": "➡️", "accept": "✅", "run": "🏃"}
             betting = trick.get("betting", [])
             betting_str = " | ".join(
-                f"Player {b['player']}: {b['action']} {action_emojis.get(b['action'], '')}"
+                f"Player {b['player']}: {b['action']}" + (f" ({b.get('bet_type')})" if b.get('bet_type') else "") + f" {action_emojis.get(b['action'], '')}"
                 for b in betting
             )
             output.append(f"    Betting: {betting_str}")
