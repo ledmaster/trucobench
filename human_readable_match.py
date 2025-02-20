@@ -20,6 +20,14 @@ def format_card(card):
     return f"{rank}{SUIT_MAP.get(suit, suit)}"
 
 def format_match_history(match_data):
+    # Save match data as JSON
+    import json
+    from datetime import datetime
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f"match_history_readable_{timestamp}.json"
+    with open(filename, 'w') as f:
+        json.dump(match_data, f, indent=2)
+
     output = []
     output.append("🎮 **Truco Match Progression** 🎮")
     output.append("-----------------------------------")
