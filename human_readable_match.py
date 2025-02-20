@@ -76,6 +76,15 @@ def format_match_history(match_data):
         hand_winner = hand.get("winner", "N/A")
         scores = hand.get("final_scores", {})
         score_str = ", ".join(f"Player {p}: {s}" for p, s in scores.items())
+        
+        # Explain why hand ended early if less than 3 tricks
+        if len(trick_rounds) < 3:
+            if hand.get("hand_ended_by_run"):
+                output.append("⚠️ **Hand ended early:** Player ran from bet")
+            else:
+                # Must have been because someone won first 2 tricks
+                output.append("⚠️ **Hand ended early:** Player won first 2 tricks")
+                
         output.append(f"**Hand Winner:** Player {hand_winner} 🏆")
         output.append(f"**Hand Final Scores:** {score_str}")
         output.append("")
