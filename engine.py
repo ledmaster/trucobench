@@ -138,15 +138,17 @@ class TrucoEngine:
         if not self.bet_stack or not self.pending_bet_response:
             raise ValueError("Cannot run - no pending bet to respond to")
             
-        # Points go to the team that made the last bet
+        # When running, points go to the opposing team (who made the last bet)
         last_bet = self.bet_stack[-1]
-        scoring_team = last_bet['team']
+        scoring_team = last_bet['team']  # Team that made the last bet gets the points
         
-        # If there's a previous bet in the stack, use its value
-        if len(self.bet_stack) > 1:
-            points = self.bet_stack[-2]['value']
-        else:
-            points = 1  # No previous bet, award 1 point
+        # Award the value of the last accepted bet
+        # If they run from the first bet (truco), award 1 point
+        points = 1  # Default if running from first bet
+        
+        # Find the last accepted bet value
+        for bet in self.bet_stack[:-1]:  # Look through all bets except the last one
+            points = bet['value']  # Use the highest value that was implicitly accepted
             
         # Award points to the team that made the last bet
         self.scores[scoring_team] += points
