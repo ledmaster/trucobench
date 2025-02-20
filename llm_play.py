@@ -5,6 +5,9 @@ from litellm import completion
 from match_logger import save_match_history
 import re
 
+class LLMResponseError(Exception):
+    pass
+
 def format_game_state(engine, player_cards, player_num):
     """Format game state for LLM consumption"""
     # Calculate if there's a pending bet to respond to
@@ -107,7 +110,9 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
             # Look for content between ```python and ``` or just {...}
             match = re.search(r'```python\s*({.*?})\s*```|({.*?})', content, re.DOTALL)
             if not match:
-                return None
+                print("Invalid LLM response format in decide_bet. Full response:")
+                print(content)
+                raise LLMResponseError(f"Invalid LLM response format in decide_bet for player {self.name}")
                 
             # Use the first group that matched (either inside ``` or standalone)
             dict_str = match.group(1) or match.group(2)
@@ -118,13 +123,17 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
                 return None
                 
             if action['action'] == 'bet' and 'bet_type' not in action:
-                return None
+                print("LLM response missing 'bet_type' in decide_bet. Full response:")
+                print(content)
+                raise LLMResponseError(f"Invalid bet action in decide_bet for player {self.name}")
                 
             return action
             
         except Exception as e:
-            print(f"Error parsing LLM response: {e}")
-            return None
+            print("LLM parsing error in decide_bet. Raw response:")
+            if 'content' in locals():
+                print(content)
+            raise LLMResponseError(f"Error parsing LLM response in decide_bet for player {self.name}: {e}")
             
     def decide_play(self, game_state):
         """Decide which card to play"""
@@ -178,7 +187,9 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
             # Look for content between ```python and ``` or just {...}
             match = re.search(r'```python\s*({.*?})\s*```|({.*?})', content, re.DOTALL)
             if not match:
-                raise ValueError("No valid dictionary found in response")
+                print("Invalid LLM response format in decide_play. Full response:")
+                print(content)
+                raise LLMResponseError(f"No valid dictionary found in LLM response in decide_play for player {self.name}")
                 
             # Use the first group that matched (either inside ``` or standalone)
             dict_str = match.group(1) or match.group(2)
@@ -186,17 +197,17 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
             
             # Validate the action has required fields
             if action['action'] != 'play' or 'card' not in action:
-                raise ValueError("Invalid play action")
+                print("Invalid play action format in decide_play. Full response:")
+                print(content)
+                raise LLMResponseError(f"Invalid play action in decide_play for player {self.name}")
                 
             return action
             
         except Exception as e:
-            print(f"Error parsing LLM response: {e}")
-            # Fallback to playing first card if there's an error
-            return {
-                'action': 'play',
-                'card': game_state['my_cards'][0]
-            }
+            print("LLM parsing error in decide_play. Raw response:")
+            if 'content' in locals():
+                print(content)
+            raise LLMResponseError(f"Error parsing LLM response in decide_play for player {self.name}: {e}")
 
 def play_match():
     """Play a single match between two LLM players"""
@@ -246,18 +257,26 @@ def play_match():
             def get_bet_action(player_idx):
                 player = player_a if player_idx == 0 else player_b
                 state = format_game_state(engine, engine.player_hands[player_idx], player_idx)
-                try:
-                    return player.decide_bet(state) or {'action': 'pass'}
-                except:
-                    return {'action': 'pass'}
+                return player.decide_bet(state)
     
-            bet_results = engine.run_betting_phase(get_bet_action)
-            for (p_idx, action) in bet_results:
-                player_name = 'A' if p_idx == 0 else 'B'
-                round_data['betting'].append({
-                    'player': player_name,
-                    'action': action.get('action', 'error')
-                })
+            try:
+                bet_results = engine.run_betting_phase(get_bet_action)
+                for (p_idx, action) in bet_results:
+                    player_name = 'A' if p_idx == 0 else 'B'
+                    round_data['betting'].append({
+                        'player': player_name,
+                        'action': action.get('action', 'error')
+                    })
+            except LLMResponseError as e:
+                print(e)
+                if "A" in str(e):
+                    print("LLM parsing error from Player A. Awarding win to Player B.")
+                    engine.scores[1] = 12
+                else:
+                    print("LLM parsing error from Player B. Awarding win to Player A.")
+                    engine.scores[0] = 12
+                engine.game_finished = True
+                return
     
             if engine.skip_round:
                 continue
@@ -270,7 +289,14 @@ def play_match():
                 state_a = format_game_state(engine, engine.player_hands[0], 0)
                 print(f"Player A cards before play: {engine.player_hands[0]}")
                 print(f"Player B cards before play: {engine.player_hands[1]}")
-                play_a = player_a.decide_play(state_a)
+                try:
+                    play_a = player_a.decide_play(state_a)
+                except LLMResponseError as e:
+                    print(e)
+                    print("LLM parsing error from Player A during card play. Awarding win to Player B.")
+                    engine.scores[1] = 12
+                    engine.game_finished = True
+                    return
                 card_a = tuple(play_a['card'])
             engine.play_card(0, card_a)
             print(f"Player A plays: {card_a}")
@@ -287,7 +313,14 @@ def play_match():
                 state_b = format_game_state(engine, engine.player_hands[1], 1)
                 print(f"Player A cards before B's play: {engine.player_hands[0]}")
                 print(f"Player B cards before B's play: {engine.player_hands[1]}")
-                play_b = player_b.decide_play(state_b)
+                try:
+                    play_b = player_b.decide_play(state_b)
+                except LLMResponseError as e:
+                    print(e)
+                    print("LLM parsing error from Player B during card play. Awarding win to Player A.")
+                    engine.scores[0] = 12
+                    engine.game_finished = True
+                    return
                 card_b = tuple(play_b['card'])
             engine.play_card(1, card_b)
             print(f"Player B plays: {card_b}")
