@@ -5,6 +5,7 @@ from litellm import completion, completion_cost
 from match_logger import save_match_history
 import re
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class LLMResponseError(Exception):
     pass
@@ -390,4 +391,18 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
     save_match_history(match_history)
 
 if __name__ == '__main__':
-    play_match(model_A='openai/gpt-4o-mini-2024-07-18', model_B='openai/o3-mini-2025-01-31')
+    NUM_MATCHES = 4  # Set the number of matches to run in parallel
+    with ThreadPoolExecutor(max_workers=NUM_MATCHES) as executor:
+        futures = [
+            executor.submit(
+                play_match,
+                model_A='openai/gpt-4o-mini-2024-07-18',
+                model_B='openai/o3-mini-2025-01-31'
+            )
+            for _ in range(NUM_MATCHES)
+        ]
+        for future in as_completed(futures):
+            try:
+                future.result()
+            except Exception as e:
+                print(f"Match execution error: {e}")
