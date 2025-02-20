@@ -111,7 +111,7 @@ def format_match_events(events):
             # Find the betting actions for this hand
             betting_actions = [e for e in events if e["type"] == "betting_action" and 
                              e["timestamp"] <= event["timestamp"] and
-                             (not current_hand or e["timestamp"] >= current_hand["timestamp"])]
+                             (not current_hand or e["timestamp"] >= event["timestamp"])]
             
             # Show the betting sequence
             for bet in betting_actions[-2:]:  # Show last 2 actions that led to hand end
