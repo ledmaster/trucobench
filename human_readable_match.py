@@ -160,7 +160,7 @@ if __name__ == "__main__":
         sys.exit(1)
        
     events = []
-    with open(args.filepath, "r") as f:
+    with open(args.filepath, "r", encoding='utf-8') as f:
         for line in f:
             events.append(json.loads(line))
        
