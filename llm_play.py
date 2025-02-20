@@ -298,7 +298,17 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
                 return
     
             if engine.skip_round:
-                continue
+                # A mão foi encerrada por um "run": a aposta não foi aceita,
+                # e os pontos devem ser os da aposta anterior (ou 1, se for o caso).
+                hand_winner = engine.bet_stack[-1]['team']  # O time que fez a última aposta
+                hand_data['winner'] = 'A' if hand_winner == 0 else 'B'
+                hand_data['hand_ended_by_run'] = True
+                hand_data['final_scores'] = {
+                    'A': engine.scores[0],
+                    'B': engine.scores[1]
+                }
+                match_history['rounds'].append(hand_data)
+                break  # Encerra imediatamente a mão sem rodadas adicionais
             # Card playing phase
             # Player A's turn
             if len(engine.player_hands[0]) == 1:
