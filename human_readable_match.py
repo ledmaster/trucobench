@@ -84,13 +84,18 @@ def format_match_history(match_data):
                 any(b['action'] == 'run' for b in trick.get('betting', []))
                 for trick in trick_rounds
             )
+            
+            # Check if someone won first 2 tricks
+            won_first_two = len(trick_rounds) >= 2 and trick_rounds[0].get('winner') == trick_rounds[1].get('winner')
+            
             if ran_during_trick:
                 output.append("⚠️ **Hand ended early:** Player ran during trick betting")
             elif hand.get("hand_ended_by_run"):
                 output.append("⚠️ **Hand ended early:** Player ran from initial bet")
-            else:
-                # Must have been because someone won first 2 tricks
+            elif won_first_two:
                 output.append("⚠️ **Hand ended early:** Player won first 2 tricks")
+            else:
+                output.append("⚠️ **Hand ended early:** Hand ended unexpectedly")
                 
         output.append(f"**Hand Winner:** Player {hand_winner} 🏆")
         output.append(f"**Hand Final Scores:** {score_str}")
