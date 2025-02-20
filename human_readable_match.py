@@ -108,8 +108,6 @@ def format_match_events(events):
             
         elif event_type == "hand_end":
             output.append("\n🔚 Hand Complete!")
-            if data.get("ended_by_run"):
-                output.append("⚠️ Hand ended early - Player ran from bet")
             output.append(f"🏆 Player {data['winner']} wins the hand")
             output.append("Current match score:")
             for player, score in data['scores'].items():
