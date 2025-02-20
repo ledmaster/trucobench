@@ -8,6 +8,14 @@ from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_t
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import sys
 
+# Lista de modelos disponíveis (deve ter pelo menos 2)
+available_models = [
+    'openai/gpt-4o-mini-2024-07-18',
+    'openai/o3-mini-2025-01-31',
+    # Adicione outros modelos se desejar, por exemplo:
+    'openai/another-model'
+]
+
 class LLMResponseError(Exception):
     pass
 
@@ -408,10 +416,11 @@ if __name__ == '__main__':
         futures = [
             executor.submit(
                 play_match,
-                model_A='openai/gpt-4o-mini-2024-07-18',
-                model_B='openai/o3-mini-2025-01-31'
+                model_A=models[0],
+                model_B=models[1]
             )
             for _ in range(NUM_MATCHES)
+            for models in [random.sample(available_models, 2)]
         ]
         for future in as_completed(futures):
             future.result()
