@@ -172,10 +172,10 @@ class TrucoEngine:
         if self.skip_round:
             return None
             
-        # If we have at least one round played and betting is complete
+        # Only return first round winner if all cards have been played
         if len(self.round_winners) >= 1 and self.betting_complete:
-            # Return the winner of the first round if no other rounds were played
-            return self.round_winners[0]
+            if all(len(hand) == 0 for hand in self.player_hands.values()):
+                return self.round_winners[0]
             
         return None
         
