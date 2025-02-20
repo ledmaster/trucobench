@@ -156,7 +156,7 @@ class TrucoEngine:
         
     def check_hand_winner(self):
         """Check if there's a winner for the current hand"""
-        if len(self.round_winners) < 2:
+        if not self.round_winners:
             return None
             
         # Count wins for each team
@@ -167,6 +167,16 @@ class TrucoEngine:
             return 0
         elif team_wins[1] >= 2:
             return 1
+        
+        # If round was skipped due to running from bet, winner should already be determined
+        if self.skip_round:
+            return None
+            
+        # If we have at least one round played and betting is complete
+        if len(self.round_winners) >= 1 and self.betting_complete:
+            # Return the winner of the first round if no other rounds were played
+            return self.round_winners[0]
+            
         return None
         
     def award_hand_points(self, winning_team):
@@ -200,10 +210,11 @@ class TrucoEngine:
             self.current_betting_player = 1 - self.current_betting_player
             self.pending_bet_response = True
         elif action['action'] == 'accept':
-            if self.bet_stack:
+            if self.pending_bet_response and self.bet_stack:
+                # When accepting a bet, use the value from the last bet
                 self.current_bet = self.bet_stack[-1]['value']
             else:
-                self.current_bet = 1  # fallback (should not occur if a bet was made)
+                self.current_bet = 1  # No pending bet to accept
             self.betting_complete = True
             self.bet_accepted = True
         elif action['action'] == 'run':
