@@ -3,13 +3,18 @@ import json
 from pathlib import Path
 
 class MatchEventLogger:
-    def __init__(self, model_a, model_b):
+    def __init__(self, model_a, model_b, unique_timestamp=True):
         self.events = []
         # Create match_events directory if it doesn't exist
         self.match_dir = Path("match_events")
         self.match_dir.mkdir(exist_ok=True)
         
-        self.timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        base_timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        if unique_timestamp:
+            # Add microseconds to ensure uniqueness in parallel matches
+            self.timestamp = f"{base_timestamp}_{datetime.now().microsecond}"
+        else:
+            self.timestamp = base_timestamp
         self.log_file = self.match_dir / f"match_events_{self.timestamp}.jsonl"
         
         # Log match start
