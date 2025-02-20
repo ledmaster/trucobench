@@ -252,7 +252,7 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
     print(f"\n=== Game Started! ===\nTeam {match_history['model_A']} vs Team {match_history['model_B']}")
     
     while not engine.game_finished:
-        engine.new_match()
+        engine.new_hand()
         
         #print("\n=== New Hand ===")
         hand_data = {

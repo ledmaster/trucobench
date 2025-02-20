@@ -23,8 +23,8 @@ class TrucoEngine:
         self.bet_accepted = False   # <<-- ADD THIS LINE
         self.bet_accepted = False   # <<-- ADD THIS LINE
         
-    def new_match(self):
-        """Initialize a new match with shuffled deck and dealt cards"""
+    def new_hand(self):
+        """Initialize a new hand: shuffle the deck, deal three cards to each player, set the single vira, and determine the manilhas"""
         self.round_winners = []  # Reset round winners
         self._create_deck()
         random.shuffle(self.deck)
