@@ -109,7 +109,8 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
         
         try:
             response = completion(model=self.model,
-                                  messages=messages)
+                                  messages=messages,
+                                  timeout=300)
             
             cost = completion_cost(completion_response=response)
             formatted_cost = f"${float(cost):.10f}"
@@ -192,7 +193,8 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
         #print(state_info)
         try:
             response = completion(model=self.model,
-                                  messages=messages)
+                                  messages=messages,
+                                  timeout=300)
             
             cost = completion_cost(completion_response=response)
             formatted_cost = f"${float(cost):.10f}"
@@ -405,7 +407,7 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
     save_match_history(match_history)
 
 if __name__ == '__main__':
-    NUM_MATCHES = 4  # Set the number of matches to run in parallel
+    NUM_MATCHES = 1  # Set the number of matches to run in parallel
     # Lista de modelos disponíveis (deve ter pelo menos 2)
     available_models = [
         'openai/gpt-4o-mini-2024-07-18',
@@ -419,8 +421,8 @@ if __name__ == '__main__':
         futures = [
             executor.submit(
                 play_match,
-                model_A=models[0],
-                model_B=models[1]
+                model_A='openai/gpt-4o-mini-2024-07-18',
+                model_B='openai/gpt-4o-mini-2024-07-18'
             )
             for _ in range(NUM_MATCHES)
             for models in [random.sample(available_models, 2)]
