@@ -125,7 +125,7 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
             if not match:
                 print("Invalid LLM response format in decide_bet. Full response:")
                 print(content)
-                raise LLMResponseError(f"Invalid LLM response format in decide_bet for player {self.name}")
+                raise LLMResponseError(f"Invalid LLM response format in decide_bet for player {self.name} (model: {self.model})")
                 
             # Use the first group that matched (either inside ``` or standalone)
             dict_str = match.group(1) or match.group(2)
@@ -138,15 +138,15 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
             if action['action'] == 'bet' and 'bet_type' not in action:
                 print("LLM response missing 'bet_type' in decide_bet. Full response:")
                 print(content)
-                raise LLMResponseError(f"Invalid bet action in decide_bet for player {self.name}")
+                raise LLMResponseError(f"Invalid bet action in decide_bet for player {self.name} (model: {self.model})")
                 
             return action
             
         except Exception as e:
-            print("LLM parsing error in decide_bet. Raw response:")
+            print(f"LLM parsing error in decide_bet for model: {self.model}. Raw response:")
             if 'content' in locals():
                 print(content)
-            raise LLMResponseError(f"Error parsing LLM response in decide_bet for player {self.name}: {e}")
+            raise LLMResponseError(f"Error parsing LLM response in decide_bet for player {self.name} (model: {self.model}): {e}")
             
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(0.5), retry=retry_if_exception_type(LLMResponseError))
     def decide_play(self, game_state):
@@ -218,7 +218,7 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
             if action['action'] != 'play' or 'card' not in action:
                 print("Invalid play action format in decide_play. Full response:")
                 print(content)
-                raise LLMResponseError(f"Invalid play action in decide_play for player {self.name}")
+                raise LLMResponseError(f"Invalid play action in decide_play for player {self.name} (model: {self.model})")
                 
             if action['action'] == 'play':
                 # Validate that the chosen card is indeed in the provided game state.
@@ -229,10 +229,10 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
             return action
             
         except Exception as e:
-            print("LLM parsing error in decide_play. Raw response:")
+            print(f"LLM parsing error in decide_play for model: {self.model}. Raw response:")
             if 'content' in locals():
                 print(content)
-            raise LLMResponseError(f"Error parsing LLM response in decide_play for player {self.name}: {e}")
+            raise LLMResponseError(f"Error parsing LLM response in decide_play for player {self.name} (model: {self.model}): {e}")
 
 def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
     """Play a single match between two LLM players"""
