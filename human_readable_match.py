@@ -85,7 +85,7 @@ def format_match_events(events):
             rounds.append(current_round)
             
             # Print round details
-            output.append(f"\n▶️ Trick {data['round_num']}:")
+            output.append(f"\n▶️ Round {data['round_num']}:")
             
             # Show betting phase if any bets were made
             if current_round["betting"]:
@@ -100,7 +100,7 @@ def format_match_events(events):
             for play in current_round["plays"]:
                 output.append(f"  • Player {play['player']} plays {format_card(play['card'])}")
             
-            output.append(f"👑 Player {data['winner']} wins the trick!")
+            output.append(f"👑 Player {data['winner']} wins the round!")
             output.append("")
             
             # Reset for next round
