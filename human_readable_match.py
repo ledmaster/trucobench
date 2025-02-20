@@ -108,7 +108,17 @@ def format_match_events(events):
             current_round = {"betting": [], "plays": []}
             
         elif event_type == "hand_end":
+            # If there are pending betting actions in current_round, show them
+            if current_round["betting"]:
+                output.append("\n▶️ Final betting round:")
+                action_emojis = {"bet": "💰", "pass": "➡️", "accept": "✅", "run": "🏃"}
+                for bet in current_round["betting"]:
+                    emoji = action_emojis.get(bet['action'], '')
+                    output.append(f"  • Player {bet['player']} chooses to {bet['action']} {emoji}")
+                
             output.append("\n🔚 Hand Complete!")
+            if data.get('ended_by_run', False):
+                output.append("Hand ended by player running from bet!")
             output.append(f"🏆 Player {data['winner']} wins the hand")
             output.append("Current match score:")
             for player, score in data['scores'].items():
