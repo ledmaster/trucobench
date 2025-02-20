@@ -272,6 +272,8 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
             #print(f"\n--- Round {round_num + 1} ---")
             #print(f"Vira: {engine.vira}")
             #print(f"Manilhas: {engine.manilhas}")
+            if engine.game_finished:
+                break
             
             round_data = {
                 'round_num': round_num + 1,
@@ -409,22 +411,23 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
     save_match_history(match_history)
 
 if __name__ == '__main__':
-    NUM_MATCHES = 1  # Set the number of matches to run in parallel
+    NUM_MATCHES = 16  # Set the number of matches to run in parallel
     # Lista de modelos disponíveis (deve ter pelo menos 2)
     available_models = [
         'openai/gpt-4o-mini-2024-07-18',
         'openai/o3-mini-2025-01-31',
-        'openai/gpt-4o-2024-11-20'
+        'openai/gpt-4o-2024-11-20',
+        'openai/o1-2024-12-17'
     ]
-    # openai/o1-2024-12-17
+    # 
     # 
     executor = ThreadPoolExecutor(max_workers=8)
     try:
         futures = [
             executor.submit(
                 play_match,
-                model_A='openai/gpt-4o-mini-2024-07-18',
-                model_B='openai/gpt-4o-mini-2024-07-18'
+                model_A=models[0],
+                model_B=models[1],
             )
             for _ in range(NUM_MATCHES)
             for models in [random.sample(available_models, 2)]
