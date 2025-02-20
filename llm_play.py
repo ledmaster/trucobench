@@ -313,6 +313,8 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
                 }
                 match_history['rounds'].append(hand_data)
                 break  # Encerra imediatamente a mão sem rodadas adicionais
+            if engine.game_finished:
+                break
             # Card playing phase
             # Player A's turn
             if len(engine.player_hands[0]) == 1:
