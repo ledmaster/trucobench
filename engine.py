@@ -149,6 +149,9 @@ class TrucoEngine:
         else:
             prev_bet = self.bet_stack[-2]
             self.scores[scoring_team] += prev_bet['value']
+        
+        if self.scores[scoring_team] >= 12:
+            self.game_finished = True
             
         return True
         
