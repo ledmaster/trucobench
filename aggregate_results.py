@@ -83,10 +83,10 @@ def aggregate_results(match_dir='match_history'):
 
     # Output the aggregated results.
     print("Aggregated Results:")
-    for model, data in results.items():
+    for model, data in sorted(results.items(), key=lambda item: (-item[1]['wins'], item[1]['losses'])):
         print(f"Model: {model}, Wins: {data['wins']}, Losses: {data['losses']}, Total Cost: ${data['cost']:.10f}")
     print("\nAggregated Results by Player Position:")
-    for pos, data in positions.items():
+    for pos, data in sorted(positions.items(), key=lambda item: (-item[1]['wins'], item[1]['losses'])):
         print(f"Player {pos} - Wins: {data['wins']}, Losses: {data['losses']}, Total Cost: ${data['cost']:.10f}")
 
 if __name__ == '__main__':
