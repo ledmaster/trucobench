@@ -107,6 +107,12 @@ def format_match_events(events):
             current_round = {"betting": [], "plays": []}
             
         elif event_type == "hand_end":
+            output.append("\n📊 Betting Phase Summary:")
+            if data.get("ended_by_run"):
+                output.append("  • Player ran from bet! Hand ended early")
+            else:
+                output.append("  • Regular betting completed")
+            
             output.append("\n🔚 Hand Complete!")
             output.append(f"🏆 Player {data['winner']} wins the hand")
             output.append("Current match score:")
