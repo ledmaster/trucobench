@@ -402,7 +402,7 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
     save_match_history(match_history)
 
 if __name__ == '__main__':
-    NUM_MATCHES = 4  # Set the number of matches to run in parallel
+    NUM_MATCHES = 1  # Set the number of matches to run in parallel
     executor = ThreadPoolExecutor(max_workers=NUM_MATCHES)
     try:
         futures = [
