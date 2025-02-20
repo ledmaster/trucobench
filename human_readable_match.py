@@ -61,12 +61,15 @@ def format_match_history(match_data):
             output.append(f"    Betting: {betting_str}")
 
             plays = trick.get("plays", [])
-            for play in plays:
-                player = play.get("player", "?")
-                card = play.get("card", [])
-                output.append(f"    Player {player} plays: {format_card(card)}")
-            
-            output.append(f"    Trick Winner: Player {trick.get('winner', 'N/A')} 🎉")
+            if not plays and hand.get("hand_ended_by_run"):
+                output.append(f"    ⚠️ Trick not played - hand ended by player running from bet")
+            else:
+                for play in plays:
+                    player = play.get("player", "?")
+                    card = play.get("card", [])
+                    output.append(f"    Player {player} plays: {format_card(card)}")
+                
+                output.append(f"    Trick Winner: Player {trick.get('winner', 'N/A')} 🎉")
             output.append("")  
             
         # Hand winner and scores
