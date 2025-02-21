@@ -31,20 +31,19 @@ def main():
 
             # Prepare the complete prompt by replacing the placeholder in the template
             prompt = verifier_prompt_template.format(readable_match_history=match_history_text)
-            print(prompt)
+            #print(prompt)
             # Send the prompt to the LLM using litellm (adjust the API call if needed)
             messages = [{"role": "user", "content": prompt}]
-            response = completion(model='openai/o3-mini', 
-                                  messages=messages, 
-                                  reasoning_effort='high')
+            response = completion(model='openrouter/openai/o3-mini',
+                                  messages=messages)
 
-            verification_output = response.choices[0].message.text
+            verification_output = response.choices[0].message.content
 
             # Construct the output filename and write the verification answer there
             base_name, _ = os.path.splitext(filename)
             output_filename = f"{base_name}_verification.txt"
             output_path = os.path.join(verification_dir, output_filename)
-            with open(output_path, 'w') as output_file:
+            with open(output_path, 'w', encoding='utf-8') as output_file:
                 output_file.write(verification_output)
 
             print(f"Saved verification for {filename} to {output_filename}")

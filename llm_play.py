@@ -15,7 +15,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import sys
 #litellm._turn_on_debug()
 
-
+import os
+os.environ["OR_APP_NAME"] = "TrucoArena"
 
 class LLMResponseError(Exception):
     def __init__(self, message, player_name=None, model=None, game_state=None, raw_response=None):
@@ -490,7 +491,7 @@ def get_model_pair(available_models, weights):
     return (first, second)
 
 if __name__ == '__main__':
-    NUM_MATCHES = 4  # Set the number of matches to run in parallel
+    NUM_MATCHES = 1  # Set the number of matches to run in parallel
     # Load previous match counts
     try:
         with open('model_matches.json', 'r') as f:

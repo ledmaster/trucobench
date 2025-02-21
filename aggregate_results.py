@@ -133,6 +133,8 @@ def aggregate_results(match_dir='match_history'):
     for pos, data in sorted(positions.items(), key=lambda item: (-item[1]['wins'], item[1]['losses'])):
         print(f"Player {pos} - Wins: {data['wins']}, Losses: {data['losses']}")
 
+    print(f"Total matches: {positions['A']['wins'] + positions['A']['losses']}")
+
     # Save number of matches per model to JSON
     matches_per_model = {model: data['wins'] + data['losses'] 
                         for model, data in results.items()}
