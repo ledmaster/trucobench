@@ -527,7 +527,14 @@ if __name__ == '__main__':
                 model_B=models[1],
             )
             for _ in range(NUM_MATCHES)
-            for models in [random.choices(available_models, weights=weights, k=1) + random.choices([m for m in available_models if m != models[0]], weights=[w for m, w in zip(available_models, weights) if m != models[0]], k=1)]
+            for models in [
+                (first := random.choices(available_models, weights=weights, k=1)[0],
+                 random.choices(
+                    [m for m in available_models if m != first],
+                    weights=[w for m, w in zip(available_models, weights) if m != first],
+                    k=1
+                )[0])
+            ]
         ]
         for future in as_completed(futures):
             future.result()
