@@ -2,7 +2,7 @@ import os
 os.environ["OR_APP_NAME"] = "TrucoArena"
 os.environ["OR_SITE_URL"] = "https://mariofilho.com"
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import json
 import math
@@ -13,6 +13,8 @@ from litellm import completion, completion_cost
 #import litellm
 #litellm._turn_on_debug()
 from match_events import MatchEventLogger
+from pathlib import Path
+import json
 import re
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type, wait_exponential
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -21,6 +23,29 @@ import sys
 
 
 
+
+class MatchTraceLogger:
+    def __init__(self, model_a, model_b):
+        self.model_a = model_a
+        self.model_b = model_b
+        self.trace_dir = Path("match_traces")
+        self.trace_dir.mkdir(exist_ok=True)
+        
+        timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+        self.trace_file = self.trace_dir / f"match_trace_{timestamp}.jsonl"
+        
+    def log_completion(self, model, messages, response, player, action_type):
+        trace = {
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'model': model,
+            'player': player,
+            'action_type': action_type,
+            'messages': messages,
+            'response': response.model_dump() if hasattr(response, 'model_dump') else response,
+        }
+        
+        with open(self.trace_file, 'a', encoding='utf-8') as f:
+            f.write(json.dumps(trace, ensure_ascii=False) + '\n')
 
 class LLMResponseError(Exception):
     def __init__(self, message, player_name=None, model=None, game_state=None, raw_response=None):
@@ -58,10 +83,11 @@ def format_game_state(engine, player_cards, player_num):
     }
 
 class TrucoPlayer:
-    def __init__(self, name, model='openai/gpt-4o-mini'):
+    def __init__(self, name, model='openai/gpt-4o-mini', trace_logger=None):
         self.name = name
         self.model = model
         self.total_cost = 0.0
+        self.trace_logger = trace_logger
         
     @retry(stop=stop_after_attempt(5), wait=wait_exponential(), retry=retry_if_exception_type(LLMResponseError))
     def decide_bet(self, game_state):
@@ -149,6 +175,15 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
                 response = completion(model=self.model,
                                     messages=messages,
                                     timeout=300)
+                
+            if self.trace_logger:
+                self.trace_logger.log_completion(
+                    model=self.model,
+                    messages=messages,
+                    response=response,
+                    player=self.name,
+                    action_type='bet'
+                )
             
             # Only track cost for non-openrouter models
             try:
@@ -265,6 +300,15 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
                 response = completion(model=self.model,
                                     messages=messages,
                                     timeout=300)
+                
+            if self.trace_logger:
+                self.trace_logger.log_completion(
+                    model=self.model,
+                    messages=messages,
+                    response=response,
+                    player=self.name,
+                    action_type='play'
+                )
             
             try:
                 cost = completion_cost(completion_response=response)
@@ -336,9 +380,12 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
     """Play a single match between two LLM players"""
     engine = TrucoEngine()
     
+    # Initialize loggers
+    trace_logger = MatchTraceLogger(model_A, model_B)
+    
     # Create players with different strategies
-    player_a = TrucoPlayer("A", model=model_A)
-    player_b = TrucoPlayer("B", model=model_B)
+    player_a = TrucoPlayer("A", model=model_A, trace_logger=trace_logger)
+    player_b = TrucoPlayer("B", model=model_B, trace_logger=trace_logger)
 
     # Initialize event logger
     event_logger = MatchEventLogger(player_a.model, player_b.model)
