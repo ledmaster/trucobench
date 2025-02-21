@@ -393,7 +393,7 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
         f.write(readable_output)
 
 if __name__ == '__main__':
-    NUM_MATCHES = 1  # Set the number of matches to run in parallel
+    NUM_MATCHES = 4  # Set the number of matches to run in parallel
     # Lista de modelos disponíveis (deve ter pelo menos 2)
     available_models = [
         #'openai/gpt-4o-mini-2024-07-18',
@@ -401,7 +401,10 @@ if __name__ == '__main__':
         #'openai/gpt-4o-2024-11-20',
         #'openai/o1-2024-12-17'
         'gemini/gemini-2.0-flash-lite-preview-02-05',
-        'gemini/gemini-1.5-flash-8b'
+        'gemini/gemini-1.5-flash-8b',
+        'openrouter/openai/gpt-4o-mini',
+        'openrouter/deepseek/deepseek-chat',
+        'gemini/gemini-2.0-flash',
 
     ]
     # 
