@@ -4,15 +4,14 @@ from pathlib import Path
 import uuid
 
 class MatchEventLogger:
-    def __init__(self, model_a, model_b, unique_timestamp=True):
+    def __init__(self, model_a, model_b, match_id):
         self.events = []
         # Create match_events directory if it doesn't exist
         self.match_dir = Path("match_events")
         self.match_dir.mkdir(exist_ok=True)
         
-        # Generate unique identifier using UUID
-        self.timestamp = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
-        self.log_file = self.match_dir / f"match_events_{self.timestamp}.jsonl"
+        self.match_id = match_id
+        self.log_file = self.match_dir / f"match_events_{match_id}.jsonl"
         
         # Log match start
         self.log_event("match_start", {

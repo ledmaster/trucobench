@@ -4,6 +4,12 @@ os.environ["OR_SITE_URL"] = "https://mariofilho.com"
 
 from datetime import datetime, timezone
 import uuid
+
+def generate_match_id():
+    """Generate a unique match identifier with timestamp and UUID"""
+    timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+    match_id = uuid.uuid4().hex[:8]
+    return f"{timestamp}_{match_id}"
 from pathlib import Path
 import json
 import math
@@ -26,15 +32,13 @@ import sys
 
 
 class MatchTraceLogger:
-    def __init__(self, model_a, model_b):
+    def __init__(self, model_a, model_b, match_id):
         self.model_a = model_a
         self.model_b = model_b
         self.trace_dir = Path("match_traces")
         self.trace_dir.mkdir(exist_ok=True)
         
-        timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
-        trace_id = uuid.uuid4().hex[:8]
-        self.trace_file = self.trace_dir / f"match_trace_{timestamp}_{trace_id}.jsonl"
+        self.trace_file = self.trace_dir / f"match_trace_{match_id}.jsonl"
         
     def log_completion(self, model, messages, response, player, action_type):
         trace = {
@@ -384,15 +388,18 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
     """Play a single match between two LLM players"""
     engine = TrucoEngine()
     
+    # Generate unique match ID
+    match_id = generate_match_id()
+    
     # Initialize loggers
-    trace_logger = MatchTraceLogger(model_A, model_B)
+    trace_logger = MatchTraceLogger(model_A, model_B, match_id)
     
     # Create players with different strategies
     player_a = TrucoPlayer("A", model=model_A, trace_logger=trace_logger)
     player_b = TrucoPlayer("B", model=model_B, trace_logger=trace_logger)
 
     # Initialize event logger
-    event_logger = MatchEventLogger(player_a.model, player_b.model)
+    event_logger = MatchEventLogger(player_a.model, player_b.model, match_id)
 
     print(f"\n=== Game Started! ===\nTeam {player_a.model} vs Team {player_b.model}")
     
@@ -533,7 +540,7 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
     match_history_dir.mkdir(exist_ok=True)
     
     readable_output = format_match_events(event_logger.events)
-    readable_file = match_history_dir / f"match_{event_logger.timestamp}.txt"
+    readable_file = match_history_dir / f"match_{event_logger.match_id}.txt"
     with open(readable_file, "w", encoding="utf-8") as f:
         f.write(readable_output)
 
