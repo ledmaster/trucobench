@@ -2,9 +2,41 @@
 import os
 import glob
 import re
+import json
+from datetime import datetime
+
+def calculate_elo_change(rating_a, rating_b, winner):
+    """Calculate Elo rating changes for both players."""
+    k_factor = 32
+    expected_a = 1 / (1 + 10 ** ((rating_b - rating_a) / 400))
+    
+    if winner == 'A':
+        score_a = 1
+    else:
+        score_a = 0
+        
+    change = k_factor * (score_a - expected_a)
+    return change, -change
+
+def load_elo_ratings():
+    """Load Elo ratings from file."""
+    try:
+        with open('elo_ratings.json', 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {"ratings": {}, "last_updated": ""}
+
+def save_elo_ratings(ratings_data):
+    """Save Elo ratings to file."""
+    ratings_data["last_updated"] = datetime.now().isoformat()
+    with open('elo_ratings.json', 'w') as f:
+        json.dump(ratings_data, f, indent=4)
 
 def aggregate_results(match_dir='match_history'):
-    # Aggregated results: { model: { 'wins': int, 'losses': int, 'cost': float } }
+    # Load existing Elo ratings
+    elo_data = load_elo_ratings()
+    
+    # Aggregated results: { model: { 'wins': int, 'losses': int, 'cost': float, 'elo': float } }
     results = {}
     positions = {
         'A': {'wins': 0, 'losses': 0, 'cost': 0.0},
@@ -57,9 +89,9 @@ def aggregate_results(match_dir='match_history'):
 
         # Initialize an entry for each model if not already present.
         if model_a not in results:
-            results[model_a] = {'wins': 0, 'losses': 0, 'cost': 0.0}
+            results[model_a] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'elo': elo_data['ratings'].get(model_a, 1500)}
         if model_b not in results:
-            results[model_b] = {'wins': 0, 'losses': 0, 'cost': 0.0}
+            results[model_b] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'elo': elo_data['ratings'].get(model_b, 1500)}
 
         # Update wins/losses based on the match winner.
         if winner == 'A':
@@ -81,14 +113,30 @@ def aggregate_results(match_dir='match_history'):
         results[model_a]['cost'] += cost_a
         results[model_b]['cost'] += cost_b
 
+        # Calculate and update Elo ratings
+        elo_change_a, elo_change_b = calculate_elo_change(
+            results[model_a]['elo'],
+            results[model_b]['elo'],
+            winner
+        )
+        results[model_a]['elo'] += elo_change_a
+        results[model_b]['elo'] += elo_change_b
+
         # Aggregate LLM costs for player positions.
         positions['A']['cost'] += cost_a
         positions['B']['cost'] += cost_b
 
+    # Save updated Elo ratings
+    elo_data['ratings'] = {model: data['elo'] for model, data in results.items()}
+    save_elo_ratings(elo_data)
+
     # Output the aggregated results.
-    print("Aggregated Results:")
-    for model, data in sorted(results.items(), key=lambda item: (-item[1]['wins'], item[1]['losses'])):
-        print(f"Model: {model}, Wins: {data['wins']}, Losses: {data['losses']}, Total Cost: ${data['cost']:.10f}")
+    print("\n🏆 Leaderboard (by Elo Rating):")
+    print("-" * 80)
+    print(f"{'Model':<40} {'Elo':>8} {'Wins':>6} {'Losses':>8} {'Cost':>12}")
+    print("-" * 80)
+    for model, data in sorted(results.items(), key=lambda item: (-item[1]['elo'], -item[1]['wins'])):
+        print(f"{model:<40} {data['elo']:>8.1f} {data['wins']:>6} {data['losses']:>8} ${data['cost']:>11.2f}")
     print("\nAggregated Results by Player Position:")
     for pos, data in sorted(positions.items(), key=lambda item: (-item[1]['wins'], item[1]['losses'])):
         print(f"Player {pos} - Wins: {data['wins']}, Losses: {data['losses']}, Total Cost: ${data['cost']:.10f}")
