@@ -85,7 +85,8 @@ def format_game_state(engine, player_cards, player_num):
         'opponent_score': engine.scores[1 - player_num],
         'current_bet': engine.current_bet,
         'bet_history': engine.bet_stack,
-        'pending_bet': pending_bet
+        'pending_bet': pending_bet,
+        'betting_round': len(engine.bet_stack) + 1
     }
 
 class TrucoPlayer:
@@ -144,6 +145,8 @@ Estado atual do jogo:
 - Seu placar: {game_state['my_score']}
 - Placar adversário: {game_state['opponent_score']}
 - Aposta atual: {game_state['current_bet']}
+- Rodada de apostas: {game_state['betting_round']}
+- Rodada de apostas: {game_state['betting_round']}
 - Histórico de apostas: {game_state['bet_history']}
 - Aposta pendente: {game_state['pending_bet'] if game_state['pending_bet'] else 'Nenhuma'}
 
