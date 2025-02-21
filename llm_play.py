@@ -1,5 +1,7 @@
 from datetime import datetime
 from pathlib import Path
+import json
+import math
 import random
 from engine import TrucoEngine
 from human_readable_match import format_match_events
@@ -461,15 +463,15 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
 
 if __name__ == '__main__':
     NUM_MATCHES = 4  # Set the number of matches to run in parallel
+    # Load previous match counts
+    try:
+        with open('model_matches.json', 'r') as f:
+            model_matches = json.load(f)
+    except FileNotFoundError:
+        model_matches = {}
+
     # Lista de modelos disponíveis (deve ter pelo menos 2)
     available_models = [
-        #'openai/gpt-4o-mini-2024-07-18',
-        #'openai/o3-mini-2025-01-31',
-        #'openai/gpt-4o-2024-11-20',
-        #'openai/o1-2024-12-17'
-        #'gemini/gemini-2.0-flash-lite-preview-02-05',
-        #'gemini/gemini-1.5-flash-8b',
-        #'openrouter/openai/gpt-4o-mini',
         'openrouter/deepseek/deepseek-chat',
         'gemini/gemini-2.0-flash',
         'openrouter/openai/o3-mini',
@@ -481,10 +483,16 @@ if __name__ == '__main__':
         'openrouter/deepseek/deepseek-r1-distill-qwen-32b',
         'openrouter/deepseek/deepseek-r1-distill-llama-70b',
         'openrouter/qwen/qwen-max'
-
     ]
-    # 
-    # 
+
+    # Calculate weights based on previous matches
+    weights = []
+    for model in available_models:
+        # Get match count, default to 0 if model not found
+        matches = model_matches.get(model.split('/')[-1], 0)
+        # Weight is inverse square root of matches + 1 (to handle 0 matches)
+        weight = 1 / math.sqrt(matches + 1)
+        weights.append(weight)
     executor = ThreadPoolExecutor(max_workers=8)
     try:
         futures = [
@@ -494,7 +502,7 @@ if __name__ == '__main__':
                 model_B=models[1],
             )
             for _ in range(NUM_MATCHES)
-            for models in [random.sample(available_models, 2)]
+            for models in [random.choices(available_models, weights=weights, k=2)]
         ]
         for future in as_completed(futures):
             future.result()
