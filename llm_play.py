@@ -131,9 +131,19 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
         ]
         
         try:
-            response = completion(model=self.model,
-                                  messages=messages,
-                                  timeout=300)
+            if 'openrouter' in self.model:
+                response = completion(model=self.model,
+                                    messages=messages,
+                                    timeout=300,
+                                    extra_body={
+                                        "provider": {
+                                            "sort":"throughput"
+                                        }
+                                    })
+            else:
+                response = completion(model=self.model,
+                                    messages=messages,
+                                    timeout=300)
             
             # Only track cost for non-openrouter models
             try:
@@ -237,9 +247,19 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
         
         #print(state_info)
         try:
-            response = completion(model=self.model,
-                                  messages=messages,
-                                  timeout=300)
+            if 'openrouter' in self.model:
+                response = completion(model=self.model,
+                                    messages=messages,
+                                    timeout=300,
+                                    extra_body={
+                                        "provider": {
+                                            "sort":"throughput",
+                                        }
+                                    })
+            else:
+                response = completion(model=self.model,
+                                    messages=messages,
+                                    timeout=300)
             
             try:
                 cost = completion_cost(completion_response=response)
@@ -472,16 +492,20 @@ if __name__ == '__main__':
 
     # Lista de modelos disponíveis (deve ter pelo menos 2)
     available_models = [
-        'openrouter/deepseek/deepseek-chat',
+        'gemini/gemini-2.0-flash-lite-preview-02-05',
         'gemini/gemini-2.0-flash',
-        'openrouter/openai/o3-mini',
-        'openrouter/anthropic/claude-3.5-sonnet',
-        'openrouter/meta-llama/llama-3.3-70b-instruct',
-        'openrouter/deepseek/deepseek-r1',
         'gemini/gemini-2.0-flash-thinking-exp-01-21',
-        'openrouter/qwen/qwen-2.5-72b-instruct',
+        'openrouter/openai/gpt-4o-mini',
+        'openrouter/openai/gpt-4o',
+        'openrouter/openai/o3-mini',
+        'openrouter/deepseek/deepseek-chat',
+        'openrouter/deepseek/deepseek-r1',
         'openrouter/deepseek/deepseek-r1-distill-qwen-32b',
         'openrouter/deepseek/deepseek-r1-distill-llama-70b',
+        'openrouter/anthropic/claude-3.5-sonnet',
+        'openrouter/anthropic/claude-3.5-haiku',
+        'openrouter/meta-llama/llama-3.3-70b-instruct',
+        'openrouter/qwen/qwen-2.5-72b-instruct',
         'openrouter/qwen/qwen-max'
     ]
 
@@ -493,6 +517,7 @@ if __name__ == '__main__':
         # Weight is inverse square root of matches + 1 (to handle 0 matches)
         weight = 1 / math.sqrt(matches + 1)
         weights.append(weight)
+    print('Sampling weights', {model: weight for model, weight in zip(available_models, weights)})
     executor = ThreadPoolExecutor(max_workers=8)
     try:
         futures = [
