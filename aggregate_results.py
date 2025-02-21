@@ -115,12 +115,17 @@ def aggregate_results(match_dir='match_events'):
     file_timestamps = []
     for file in files:
         # Extract datetime from filename
-        try:
-            file_date = datetime.strptime(os.path.basename(file)[:15], '%Y%m%d_%H%M%S')
-            file_timestamps.append((file_date, file))
-        except ValueError:
-            print(f"Could not parse timestamp from filename: {file}")
-            continue
+        # Extract timestamp from match_events_YYYYMMDD_HHMMSS_uuid.jsonl format
+        timestamp_match = re.search(r'match_events_(\d{8}_\d{6})_', os.path.basename(file))
+        if timestamp_match:
+            try:
+                file_date = datetime.strptime(timestamp_match.group(1), '%Y%m%d_%H%M%S')
+                file_timestamps.append((file_date, file))
+            except ValueError:
+                print(f"Could not parse timestamp from filename: {file}")
+                continue
+        else:
+            print(f"No timestamp found in filename: {file}")
     
     # Sort files by timestamp
     file_timestamps.sort(key=lambda x: x[0])
