@@ -116,10 +116,12 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
                                   messages=messages,
                                   timeout=300)
             
-            cost = completion_cost(completion_response=response)
-            formatted_cost = f"${float(cost):.10f}"
-            #print(formatted_cost)
-            self.total_cost += float(cost)
+            # Only track cost for non-openrouter models
+            if 'openrouter' not in self.model:
+                cost = completion_cost(completion_response=response)
+                formatted_cost = f"${float(cost):.10f}"
+                #print(formatted_cost)
+                self.total_cost += float(cost)
             
             content = response.choices[0].message.content
             #print(content)
@@ -200,9 +202,11 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
                                   messages=messages,
                                   timeout=300)
             
-            cost = completion_cost(completion_response=response)
-            formatted_cost = f"${float(cost):.10f}"
-            #print(formatted_cost)
+            # Only track cost for non-openrouter models
+            if 'openrouter' not in self.model:
+                cost = completion_cost(completion_response=response)
+                formatted_cost = f"${float(cost):.10f}"
+                #print(formatted_cost)
             
             content = response.choices[0].message.content
             #print(content)
