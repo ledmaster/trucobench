@@ -13,7 +13,21 @@ import sys
 
 
 class LLMResponseError(Exception):
-    pass
+    def __init__(self, message, player_name=None, model=None, game_state=None, raw_response=None):
+        self.player_name = player_name
+        self.model = model
+        self.game_state = game_state
+        self.raw_response = raw_response
+        
+        error_details = [
+            f"Player: {player_name}" if player_name else None,
+            f"Model: {model}" if model else None,
+            f"Game state: {game_state}" if game_state else None,
+            f"Raw response: {raw_response}" if raw_response else None
+        ]
+        
+        detailed_message = "\n".join(filter(None, [message] + error_details))
+        super().__init__(detailed_message)
 
 def format_game_state(engine, player_cards, player_num):
     """Format game state for LLM consumption"""
@@ -131,7 +145,13 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
             if not match:
                 print("Invalid LLM response format in decide_bet. Full response:")
                 print(content)
-                raise LLMResponseError(f"Invalid LLM response format in decide_bet for player {self.name} (model: {self.model})")
+                raise LLMResponseError(
+                    "Invalid LLM response format in decide_bet",
+                    player_name=self.name,
+                    model=self.model,
+                    game_state=game_state,
+                    raw_response=content
+                )
                 
             # Use the first group that matched (either inside ``` or standalone)
             dict_str = match.group(1) or match.group(2)
@@ -144,7 +164,13 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
             if action['action'] == 'bet' and 'bet_type' not in action:
                 print("LLM response missing 'bet_type' in decide_bet. Full response:")
                 print(content)
-                raise LLMResponseError(f"Invalid bet action in decide_bet for player {self.name} (model: {self.model})")
+                raise LLMResponseError(
+                    "Invalid bet action in decide_bet - missing bet_type",
+                    player_name=self.name,
+                    model=self.model,
+                    game_state=game_state,
+                    raw_response=content
+                )
                 
             return action
             
@@ -152,7 +178,13 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
             print(f"LLM parsing error in decide_bet for model: {self.model}. Raw response:")
             if 'content' in locals():
                 print(content)
-            raise LLMResponseError(f"Error parsing LLM response in decide_bet for player {self.name} (model: {self.model}): {e}")
+            raise LLMResponseError(
+                f"Error parsing LLM response in decide_bet: {str(e)}",
+                player_name=self.name,
+                model=self.model,
+                game_state=game_state,
+                raw_response=content if 'content' in locals() else None
+            )
             
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(0.5), retry=retry_if_exception_type(LLMResponseError))
     def decide_play(self, game_state):
@@ -216,7 +248,13 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
             if not match:
                 print("Invalid LLM response format in decide_play. Full response:")
                 print(content)
-                raise LLMResponseError(f"No valid dictionary found in LLM response in decide_play for player {self.name} (model: {self.model})")
+                raise LLMResponseError(
+                    "No valid dictionary found in LLM response in decide_play",
+                    player_name=self.name,
+                    model=self.model,
+                    game_state=game_state,
+                    raw_response=content
+                )
                 
             # Use the first group that matched (either inside ``` or standalone)
             dict_str = match.group(1) or match.group(2)
@@ -226,13 +264,25 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
             if action['action'] != 'play' or 'card' not in action:
                 print("Invalid play action format in decide_play. Full response:")
                 print(content)
-                raise LLMResponseError(f"Invalid play action in decide_play for player {self.name} (model: {self.model})")
+                raise LLMResponseError(
+                    "Invalid play action in decide_play - missing required fields",
+                    player_name=self.name,
+                    model=self.model,
+                    game_state=game_state,
+                    raw_response=content
+                )
                 
             if action['action'] == 'play':
                 # Validate that the chosen card is indeed in the provided game state.
                 if tuple(action['card']) not in game_state['my_cards']:
                     print("Decided card is not among the available cards in game_state.")
-                    raise LLMResponseError("Invalid card: not in player's hand")
+                    raise LLMResponseError(
+                        "Invalid card: not in player's hand",
+                        player_name=self.name,
+                        model=self.model,
+                        game_state=game_state,
+                        raw_response=content
+                    )
                     
             return action
             
@@ -240,7 +290,13 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
             print(f"LLM parsing error in decide_play for model: {self.model}. Raw response:")
             if 'content' in locals():
                 print(content)
-            raise LLMResponseError(f"Error parsing LLM response in decide_play for player {self.name} (model: {self.model}): {e}")
+            raise LLMResponseError(
+                f"Error parsing LLM response in decide_play: {str(e)}",
+                player_name=self.name,
+                model=self.model,
+                game_state=game_state,
+                raw_response=content if 'content' in locals() else None
+            )
 
 def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
     """Play a single match between two LLM players"""
