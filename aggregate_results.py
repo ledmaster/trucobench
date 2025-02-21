@@ -19,7 +19,7 @@ def calculate_elo_change(rating_a, rating_b, winner):
     return change, -change
 
 
-def aggregate_results(match_dir='match_history'):
+def aggregate_results(match_dir='match_events'):
     # Aggregated results: { model: { 'wins': int, 'losses': int, 'cost': float, 'elo': float, 'matches': list } }
     results = {}
     positions = {
@@ -27,8 +27,8 @@ def aggregate_results(match_dir='match_history'):
         'B': {'wins': 0, 'losses': 0, 'cost': 0.0}
     }
 
-    # Get all .txt files in the match history folder
-    files = glob.glob(os.path.join(match_dir, '*.txt'))
+    # Get all .jsonl files in the match events folder
+    files = glob.glob(os.path.join(match_dir, '*.jsonl'))
     if not files:
         print(f"No match files found in directory: {match_dir}")
         return
@@ -114,9 +114,13 @@ def aggregate_results(match_dir='match_history'):
     # Extract timestamps and sort files chronologically
     file_timestamps = []
     for file in files:
-        timestamp = re.search(r'match_events_(\d{8}_\d{6})_', os.path.basename(file))
-        if timestamp:
-            file_timestamps.append((timestamp.group(1), file))
+        # Extract datetime from filename
+        try:
+            file_date = datetime.strptime(os.path.basename(file)[:15], '%Y%m%d_%H%M%S')
+            file_timestamps.append((file_date, file))
+        except ValueError:
+            print(f"Could not parse timestamp from filename: {file}")
+            continue
     
     # Sort files by timestamp
     file_timestamps.sort(key=lambda x: x[0])
