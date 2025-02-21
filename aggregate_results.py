@@ -18,25 +18,9 @@ def calculate_elo_change(rating_a, rating_b, winner):
     change = k_factor * (score_a - expected_a)
     return change, -change
 
-def load_elo_ratings():
-    """Load Elo ratings from file."""
-    try:
-        with open('elo_ratings.json', 'r') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {"ratings": {}, "last_updated": ""}
-
-def save_elo_ratings(ratings_data):
-    """Save Elo ratings to file."""
-    ratings_data["last_updated"] = datetime.now().isoformat()
-    with open('elo_ratings.json', 'w') as f:
-        json.dump(ratings_data, f, indent=4)
 
 def aggregate_results(match_dir='match_history'):
-    # Load existing Elo ratings
-    elo_data = load_elo_ratings()
-    
-    # Aggregated results: { model: { 'wins': int, 'losses': int, 'cost': float, 'elo': float } }
+    # Aggregated results: { model: { 'wins': int, 'losses': int, 'cost': float, 'elo': float, 'matches': list } }
     results = {}
     positions = {
         'A': {'wins': 0, 'losses': 0, 'cost': 0.0},
@@ -89,9 +73,9 @@ def aggregate_results(match_dir='match_history'):
 
         # Initialize an entry for each model if not already present.
         if model_a not in results:
-            results[model_a] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'elo': elo_data['ratings'].get(model_a, 1500)}
+            results[model_a] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'elo': 1500, 'matches': []}
         if model_b not in results:
-            results[model_b] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'elo': elo_data['ratings'].get(model_b, 1500)}
+            results[model_b] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'elo': 1500, 'matches': []}
 
         # Update wins/losses based on the match winner.
         if winner == 'A':
@@ -113,22 +97,33 @@ def aggregate_results(match_dir='match_history'):
         results[model_a]['cost'] += cost_a
         results[model_b]['cost'] += cost_b
 
-        # Calculate and update Elo ratings
-        elo_change_a, elo_change_b = calculate_elo_change(
-            results[model_a]['elo'],
-            results[model_b]['elo'],
-            winner
-        )
-        results[model_a]['elo'] += elo_change_a
-        results[model_b]['elo'] += elo_change_b
+        # Store match result for later Elo calculation
+        results[model_a]['matches'].append({
+            'opponent': model_b,
+            'winner': winner == 'A'
+        })
+        results[model_b]['matches'].append({
+            'opponent': model_a,
+            'winner': winner == 'B'
+        })
 
         # Aggregate LLM costs for player positions.
         positions['A']['cost'] += cost_a
         positions['B']['cost'] += cost_b
 
-    # Save updated Elo ratings
-    elo_data['ratings'] = {model: data['elo'] for model, data in results.items()}
-    save_elo_ratings(elo_data)
+    # Calculate final Elo ratings by replaying all matches in chronological order
+    for model, data in results.items():
+        data['elo'] = 1500  # Reset to starting Elo
+    
+    # Process all matches chronologically to calculate final Elo ratings
+    for model, data in results.items():
+        for match in data['matches']:
+            opponent_data = results[match['opponent']]
+            elo_change, _ = calculate_elo_change(data['elo'], opponent_data['elo'], 'A' if match['winner'] else 'B')
+            if match['winner']:
+                data['elo'] += elo_change
+            else:
+                data['elo'] -= elo_change
 
     # Output the aggregated results.
     print("\n🏆 Leaderboard (by Elo Rating):")
