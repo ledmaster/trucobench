@@ -100,12 +100,12 @@ class TrucoPlayer:
         """Decide whether to make/respond to a bet"""
         rules = """Você é um jogador de Truco tomando uma decisão sobre apostas.
 
-IMPORTANTE: Se houver uma aposta pendente (pending_bet não é None), você DEVE responder com uma das ações:
+IMPORTANTE: Se houver uma aposta pendente, você DEVE responder com uma das ações:
 - 'accept' para aceitar a aposta (apenas se houver uma aposta pendente)
 - 'run' para correr (apenas se houver uma aposta pendente)
 - 'bet' com o próximo valor para aumentar
 
-Se não houver aposta pendente (pending_bet é None), você DEVE:
+Se não houver aposta pendente, você DEVE:
 - Retornar 'pass' para não fazer aposta, ou
 - Fazer uma aposta com 'bet' e o tipo de aposta
 
@@ -145,7 +145,7 @@ Estado atual do jogo:
 - Placar adversário: {game_state['opponent_score']}
 - Aposta atual: {game_state['current_bet']}
 - Histórico de apostas: {game_state['bet_history']}
-- Aposta pendente: {game_state['pending_bet']}
+- Aposta pendente: {game_state['pending_bet'] if game_state['pending_bet'] else 'Nenhuma'}
 
 Qual sua decisão sobre apostas? Retorne um dicionário Python, num bloco de código Python (três crases ``` antes e depois), com uma das seguintes estruturas:
 
@@ -166,7 +166,7 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python, num bloco de có
 {{'action': 'accept'}}
 ```
 
-4. Para correr de uma aposta:
+4. Para correr de uma aposta pendente:
 ```python
    {{'action': 'run'}}
 ```
