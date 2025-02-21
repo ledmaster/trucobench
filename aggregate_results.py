@@ -5,11 +5,16 @@ import re
 import json
 from datetime import datetime
 
+def calculate_elo_change(winner_elo, loser_elo, k_factor=32):
+    """Calculate ELO rating changes after a match"""
+    expected_winner = 1 / (1 + 10**((loser_elo - winner_elo) / 400))
+    elo_change = k_factor * (1 - expected_winner)
+    return elo_change
+
 
 
 def aggregate_results(match_dir='match_history'):
-    # Aggregated results: { model: { 'wins': int, 'losses': int, 'cost': float, 'elo': float, 'matches': list } }
-    # Aggregated results: { model: { 'wins': int, 'losses': int, 'cost': float } }
+    # Aggregated results: { model: { 'wins': int, 'losses': int, 'cost': float, 'elo': float } }
     results = {}
     positions = {
         'A': {'wins': 0, 'losses': 0, 'cost': 0.0},
@@ -22,7 +27,11 @@ def aggregate_results(match_dir='match_history'):
         print(f"No match files found in directory: {match_dir}")
         return
 
+    # Sort files by timestamp to process matches chronologically
+    files.sort()
+
     # Regex patterns to extract needed info from the match file:
+    timestamp_pattern = r"🕒 Timestamp: (.+)"
     model_a_pattern = r"🤖 Player A Model: (.+)"
     model_b_pattern = r"🤖 Player B Model: (.+)"
     scores_pattern = r"🏁 \*\*Match Final Scores:\*\* Player A: (\d+), Player B: (\d+)"
@@ -60,11 +69,28 @@ def aggregate_results(match_dir='match_history'):
         cost_a = float(m_cost.group(1))
         cost_b = float(m_cost.group(2))
 
-        # Initialize an entry for each model if not already present.
+        # Extract timestamp
+        m_timestamp = re.search(timestamp_pattern, content)
+        if not m_timestamp:
+            print(f"Timestamp not found in file {file}. Skipping.")
+            continue
+        match_timestamp = datetime.fromisoformat(m_timestamp.group(1))
+
+        # Initialize an entry for each model if not already present
         if model_a not in results:
-            results[model_a] = {'wins': 0, 'losses': 0, 'cost': 0.0}
+            results[model_a] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'elo': 1500}
         if model_b not in results:
-            results[model_b] = {'wins': 0, 'losses': 0, 'cost': 0.0}
+            results[model_b] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'elo': 1500}
+
+        # Calculate and update ELO ratings
+        if winner == 'A':
+            elo_change = calculate_elo_change(results[model_a]['elo'], results[model_b]['elo'])
+            results[model_a]['elo'] += elo_change
+            results[model_b]['elo'] -= elo_change
+        else:
+            elo_change = calculate_elo_change(results[model_b]['elo'], results[model_a]['elo'])
+            results[model_b]['elo'] += elo_change
+            results[model_a]['elo'] -= elo_change
 
         # Update wins/losses based on the match winner.
         if winner == 'A':
@@ -93,12 +119,14 @@ def aggregate_results(match_dir='match_history'):
 
 
     # Output the aggregated results.
-    print("\n🏆 Leaderboard (by Wins):")
-    print("-" * 80)
-    print(f"{'Model':<40} {'Wins':>6} {'Losses':>8}")
-    print("-" * 80)
-    for model, data in sorted(results.items(), key=lambda item: (-item[1]['wins'], item[1]['losses'])):
-        print(f"{model:<40} {data['wins']:>6} {data['losses']:>8}")
+    print("\n🏆 Leaderboard (by ELO):")
+    print("-" * 100)
+    print(f"{'Model':<40} {'ELO':>8} {'Wins':>6} {'Losses':>8} {'Win Rate':>10}")
+    print("-" * 100)
+    for model, data in sorted(results.items(), key=lambda item: -item[1]['elo']):
+        total_games = data['wins'] + data['losses']
+        win_rate = (data['wins'] / total_games * 100) if total_games > 0 else 0
+        print(f"{model:<40} {data['elo']:>8.1f} {data['wins']:>6} {data['losses']:>8} {win_rate:>9.1f}%")
     print("\nAggregated Results by Player Position:")
     for pos, data in sorted(positions.items(), key=lambda item: (-item[1]['wins'], item[1]['losses'])):
         print(f"Player {pos} - Wins: {data['wins']}, Losses: {data['losses']}")
