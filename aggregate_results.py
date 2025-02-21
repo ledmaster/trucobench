@@ -50,6 +50,8 @@ def aggregate_results(match_dir='match_history'):
             continue
         model_a = m_a.group(1).strip()
         model_b = m_b.group(1).strip()
+        model_a = model_a.split('/')[-1]
+        model_b = model_b.split('/')[-1]
 
         # Extract final scores and winner
         m_scores = re.search(scores_pattern, content)
@@ -78,9 +80,9 @@ def aggregate_results(match_dir='match_history'):
 
         # Initialize an entry for each model if not already present
         if model_a not in results:
-            results[model_a] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'elo': 1500}
+            results[model_a] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'elo': 1000}
         if model_b not in results:
-            results[model_b] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'elo': 1500}
+            results[model_b] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'elo': 1000}
 
         # Calculate and update ELO ratings
         if winner == 'A':
