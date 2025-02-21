@@ -1,3 +1,7 @@
+import os
+os.environ["OR_APP_NAME"] = "TrucoArena"
+os.environ["OR_SITE_URL"] = "https://mariofilho.com"
+
 from datetime import datetime
 from pathlib import Path
 import json
@@ -15,8 +19,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import sys
 #litellm._turn_on_debug()
 
-import os
-os.environ["OR_APP_NAME"] = "TrucoArena"
+
+
 
 class LLMResponseError(Exception):
     def __init__(self, message, player_name=None, model=None, game_state=None, raw_response=None):
@@ -491,6 +495,10 @@ def get_model_pair(available_models, weights):
     return (first, second)
 
 if __name__ == '__main__':
+    #from litellm.secret_managers.main import get_secret
+    #print(get_secret('OR_APP_NAME'))
+    #import time
+    #time.sleep(1000)
     NUM_MATCHES = 1  # Set the number of matches to run in parallel
     # Load previous match counts
     try:
