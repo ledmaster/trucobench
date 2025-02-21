@@ -4,11 +4,14 @@ import random
 from engine import TrucoEngine
 from human_readable_match import format_match_events
 from litellm import completion, completion_cost
+#import litellm
+#litellm._turn_on_debug()
 from match_events import MatchEventLogger
 import re
-from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
+from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type, wait_exponential
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import sys
+#litellm._turn_on_debug()
 
 
 
@@ -53,7 +56,7 @@ class TrucoPlayer:
         self.model = model
         self.total_cost = 0.0
         
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(0.5), retry=retry_if_exception_type(LLMResponseError))
+    @retry(stop=stop_after_attempt(5), wait=wait_exponential(), retry=retry_if_exception_type(LLMResponseError))
     def decide_bet(self, game_state):
         """Decide whether to make/respond to a bet"""
         rules = """Você é um jogador de Truco tomando uma decisão sobre apostas.
@@ -131,11 +134,13 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
                                   timeout=300)
             
             # Only track cost for non-openrouter models
-            if 'openrouter' not in self.model:
+            try:
                 cost = completion_cost(completion_response=response)
                 formatted_cost = f"${float(cost):.10f}"
                 #print(formatted_cost)
                 self.total_cost += float(cost)
+            except:
+                pass
             
             content = response.choices[0].message.content
             #print(content)
@@ -186,7 +191,7 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
                 raw_response=content if 'content' in locals() else None
             )
             
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(0.5), retry=retry_if_exception_type(LLMResponseError))
+    @retry(stop=stop_after_attempt(5), wait=wait_exponential(), retry=retry_if_exception_type(LLMResponseError))
     def decide_play(self, game_state):
         """Decide which card to play"""
         rules = """Você é um jogador de Truco decidindo qual carta jogar.
@@ -234,11 +239,13 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
                                   messages=messages,
                                   timeout=300)
             
-            # Only track cost for non-openrouter models
-            if 'openrouter' not in self.model:
+            try:
                 cost = completion_cost(completion_response=response)
                 formatted_cost = f"${float(cost):.10f}"
                 #print(formatted_cost)
+                self.total_cost += float(cost)
+            except:
+                pass
             
             content = response.choices[0].message.content
             #print(content)
@@ -453,23 +460,27 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
         f.write(readable_output)
 
 if __name__ == '__main__':
-    NUM_MATCHES = 1  # Set the number of matches to run in parallel
+    NUM_MATCHES = 4  # Set the number of matches to run in parallel
     # Lista de modelos disponíveis (deve ter pelo menos 2)
     available_models = [
         #'openai/gpt-4o-mini-2024-07-18',
         #'openai/o3-mini-2025-01-31',
         #'openai/gpt-4o-2024-11-20',
         #'openai/o1-2024-12-17'
-        'gemini/gemini-2.0-flash-lite-preview-02-05',
+        #'gemini/gemini-2.0-flash-lite-preview-02-05',
         #'gemini/gemini-1.5-flash-8b',
-        'openrouter/openai/gpt-4o-mini',
+        #'openrouter/openai/gpt-4o-mini',
         'openrouter/deepseek/deepseek-chat',
         'gemini/gemini-2.0-flash',
         'openrouter/openai/o3-mini',
         'openrouter/anthropic/claude-3.5-sonnet',
         'openrouter/meta-llama/llama-3.3-70b-instruct',
-        'openrouter/deepseek/deepseek-r1:free',
-        'gemini/gemini-2.0-flash-thinking-exp-01-21'
+        'openrouter/deepseek/deepseek-r1',
+        'gemini/gemini-2.0-flash-thinking-exp-01-21',
+        'openrouter/qwen/qwen-2.5-72b-instruct',
+        'openrouter/deepseek/deepseek-r1-distill-qwen-32b',
+        'openrouter/deepseek/deepseek-r1-distill-llama-70b',
+        'openrouter/qwen/qwen-max'
 
     ]
     # 
