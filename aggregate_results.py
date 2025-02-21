@@ -7,7 +7,7 @@ from datetime import datetime
 
 
 
-def aggregate_results(match_dir='match_events'):
+def aggregate_results(match_dir='match_history'):
     # Aggregated results: { model: { 'wins': int, 'losses': int, 'cost': float, 'elo': float, 'matches': list } }
     # Aggregated results: { model: { 'wins': int, 'losses': int, 'cost': float } }
     results = {}
@@ -17,7 +17,7 @@ def aggregate_results(match_dir='match_events'):
     }
 
     # Get all .jsonl files in the match events folder
-    files = glob.glob(os.path.join(match_dir, '*.jsonl'))
+    files = glob.glob(os.path.join(match_dir, '*.txt'))
     if not files:
         print(f"No match files found in directory: {match_dir}")
         return
@@ -95,13 +95,13 @@ def aggregate_results(match_dir='match_events'):
     # Output the aggregated results.
     print("\n🏆 Leaderboard (by Wins):")
     print("-" * 80)
-    print(f"{'Model':<40} {'Wins':>6} {'Losses':>8} {'Cost':>12}")
+    print(f"{'Model':<40} {'Wins':>6} {'Losses':>8}")
     print("-" * 80)
     for model, data in sorted(results.items(), key=lambda item: (-item[1]['wins'], item[1]['losses'])):
-        print(f"{model:<40} {data['wins']:>6} {data['losses']:>8} ${data['cost']:>11.2f}")
+        print(f"{model:<40} {data['wins']:>6} {data['losses']:>8}")
     print("\nAggregated Results by Player Position:")
     for pos, data in sorted(positions.items(), key=lambda item: (-item[1]['wins'], item[1]['losses'])):
-        print(f"Player {pos} - Wins: {data['wins']}, Losses: {data['losses']}, Total Cost: ${data['cost']:.10f}")
+        print(f"Player {pos} - Wins: {data['wins']}, Losses: {data['losses']}")
 
 if __name__ == '__main__':
     aggregate_results()
