@@ -481,6 +481,14 @@ def play_match(model_A='openai/gpt-4o-mini', model_B='openai/gpt-4o-mini'):
     with open(readable_file, "w", encoding="utf-8") as f:
         f.write(readable_output)
 
+def get_model_pair(available_models, weights):
+    """Select two different models using weighted random sampling"""
+    first = random.choices(available_models, weights=weights, k=1)[0]
+    remaining_models = [m for m in available_models if m != first]
+    remaining_weights = [w for m, w in zip(available_models, weights) if m != first]
+    second = random.choices(remaining_models, weights=remaining_weights, k=1)[0]
+    return (first, second)
+
 if __name__ == '__main__':
     NUM_MATCHES = 4  # Set the number of matches to run in parallel
     # Load previous match counts
@@ -527,14 +535,7 @@ if __name__ == '__main__':
                 model_B=models[1],
             )
             for _ in range(NUM_MATCHES)
-            for models in [
-                (first := random.choices(available_models, weights=weights, k=1)[0],
-                 random.choices(
-                    [m for m in available_models if m != first],
-                    weights=[w for m, w in zip(available_models, weights) if m != first],
-                    k=1
-                )[0])
-            ]
+            for models in [get_model_pair(available_models, weights)]
         ]
         for future in as_completed(futures):
             future.result()
