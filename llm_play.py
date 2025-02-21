@@ -147,20 +147,30 @@ Estado atual do jogo:
 - Histórico de apostas: {game_state['bet_history']}
 - Aposta pendente: {game_state['pending_bet']}
 
-Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das seguintes estruturas:
+Qual sua decisão sobre apostas? Retorne um dicionário Python, num bloco de código Python (três crases ``` antes e depois), com uma das seguintes estruturas:
 
 1. Para não fazer aposta:
-   {{'action': 'pass'}}
+```python
+{{'action': 'pass'}}
+```
 
 2. Para pedir truco/aumentar aposta:
    {{"action": "bet", "bet_type": "truco/six/nine/twelve"}}
-   Exemplo: {{"action": "bet", "bet_type": "truco"}}
+   Exemplo:
+```python
+{{"action": "bet", "bet_type": "truco"}}
+```
 
 3. Para aceitar uma aposta pendente:
-   {{'action': 'accept'}}
+```python
+{{'action': 'accept'}}
+```
 
 4. Para correr de uma aposta:
-   {{'action': 'run'}}"""
+```python
+   {{'action': 'run'}}
+```
+"""
 
         messages = [
             {"role": "system", "content": rules},
@@ -283,9 +293,11 @@ Manilhas (da mais forte para mais fraca):
 - Manilha de Espadas - E
 - Manilha de Ouros (mais fraca) - O
 
-Qual carta você quer jogar? Retorne um dicionário Python com a estrutura:
-{{"action": "play", "card": ["rank", "suit"]}}
-Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
+Qual carta você quer jogar? Retorne um dicionário Python, num bloco de código Python (três crases ``` antes e depois), com a estrutura: {{"action": "play", "card": ["rank", "suit"]}}
+Exemplo: 
+```python
+{{"action": "play", "card": ["K", "P"]}}
+```"""
 
         messages = [
             {"role": "system", "content": rules},
