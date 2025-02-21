@@ -169,6 +169,7 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python com uma das segui
                                     messages=messages,
                                     timeout=300,
                                     extra_body={
+                                        "include_reasoning": True,
                                         "provider": {
                                             "sort":"throughput"
                                         }
@@ -294,6 +295,7 @@ Exemplo: {{"action": "play", "card": ["K", "P"]}}"""
                                     messages=messages,
                                     timeout=300,
                                     extra_body={
+                                        "include_reasoning": True,
                                         "provider": {
                                             "sort":"throughput",
                                         }
