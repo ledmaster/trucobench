@@ -3,6 +3,7 @@ os.environ["OR_APP_NAME"] = "TrucoArena"
 os.environ["OR_SITE_URL"] = "https://mariofilho.com"
 
 from datetime import datetime, timezone
+import uuid
 from pathlib import Path
 import json
 import math
@@ -32,7 +33,8 @@ class MatchTraceLogger:
         self.trace_dir.mkdir(exist_ok=True)
         
         timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
-        self.trace_file = self.trace_dir / f"match_trace_{timestamp}.jsonl"
+        trace_id = uuid.uuid4().hex[:8]
+        self.trace_file = self.trace_dir / f"match_trace_{timestamp}_{trace_id}.jsonl"
         
     def log_completion(self, model, messages, response, player, action_type):
         trace = {
