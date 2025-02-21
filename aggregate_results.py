@@ -111,19 +111,47 @@ def aggregate_results(match_dir='match_history'):
         positions['A']['cost'] += cost_a
         positions['B']['cost'] += cost_b
 
-    # Calculate final Elo ratings by replaying all matches in chronological order
-    for model, data in results.items():
-        data['elo'] = 1500  # Reset to starting Elo
+    # Extract timestamps and sort files chronologically
+    file_timestamps = []
+    for file in files:
+        timestamp = re.search(r'match_events_(\d{8}_\d{6})_', os.path.basename(file))
+        if timestamp:
+            file_timestamps.append((timestamp.group(1), file))
     
-    # Process all matches chronologically to calculate final Elo ratings
-    for model, data in results.items():
-        for match in data['matches']:
-            opponent_data = results[match['opponent']]
-            elo_change, _ = calculate_elo_change(data['elo'], opponent_data['elo'], 'A' if match['winner'] else 'B')
-            if match['winner']:
-                data['elo'] += elo_change
+    # Sort files by timestamp
+    file_timestamps.sort(key=lambda x: x[0])
+    
+    # Reset all Elo ratings
+    for model in results:
+        results[model]['elo'] = 1500
+
+    # Process matches chronologically
+    for _, file in file_timestamps:
+        with open(file, 'r', encoding='utf-8') as f:
+            content = f.read()
+            
+        m_a = re.search(model_a_pattern, content)
+        m_b = re.search(model_b_pattern, content)
+        m_winner = re.search(winner_pattern, content)
+        
+        if m_a and m_b and m_winner:
+            model_a = m_a.group(1).strip()
+            model_b = m_b.group(1).strip()
+            winner = m_winner.group(1).strip()
+            
+            # Calculate and apply Elo changes for both players
+            elo_change, _ = calculate_elo_change(
+                results[model_a]['elo'],
+                results[model_b]['elo'],
+                winner
+            )
+            
+            if winner == 'A':
+                results[model_a]['elo'] += elo_change
+                results[model_b]['elo'] -= elo_change
             else:
-                data['elo'] -= elo_change
+                results[model_a]['elo'] -= elo_change
+                results[model_b]['elo'] += elo_change
 
     # Output the aggregated results.
     print("\n🏆 Leaderboard (by Elo Rating):")
