@@ -215,7 +215,7 @@ Qual sua decisão sobre apostas? Retorne um dicionário Python, num bloco de có
             #print(content)
                 
             # Look for content between ```python and ``` or just {...}
-            match = re.search(r'```python\s*({.*?})\s*```|({.*?})', content, re.DOTALL)
+            match = re.search(r'```python\s*(\{[^}]*\})\s*```|(\{[^}]*\})', content, re.DOTALL)
             if not match:
                 print("Invalid LLM response format in decide_bet. Full response:")
                 print(content)
