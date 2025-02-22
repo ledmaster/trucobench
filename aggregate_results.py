@@ -13,8 +13,8 @@ def calculate_elo_change(winner_elo, loser_elo, k_factor=32):
 
 
 
-def calculate_aggressiveness_metrics(match_events_dir='match_events'):
-    """Calculate betting and running patterns for each model"""
+def calculate_model_metrics(match_events_dir='match_events'):
+    """Calculate betting patterns and luck metrics for each model"""
     model_stats = {}
     
     # Get all match event files
@@ -38,13 +38,24 @@ def calculate_aggressiveness_metrics(match_events_dir='match_events'):
                         'bets_initiated': 0,
                         'runs': 0,
                         'accepts': 0,
-                        'raises': 0
+                        'raises': 0,
+                        'total_hands': 0,
+                        'hands_with_manilha': 0
                     }
             
             # Process all events
             for line in f:
                 event = json.loads(line)
-                if event['type'] == 'betting_action':
+                if event['type'] == 'hand_start':
+                    # Count manilhas in initial hands
+                    manilhas = set(tuple(card) for card in event['data']['manilhas'])
+                    for player, hand in event['data']['initial_hands'].items():
+                        model = model_a if player == 'A' else model_b
+                        model_stats[model]['total_hands'] += 1
+                        if any(tuple(card) in manilhas for card in hand):
+                            model_stats[model]['hands_with_manilha'] += 1
+                
+                elif event['type'] == 'betting_action':
                     action = event['data']['action']
                     player = event['data']['player']
                     model = model_a if player == 'A' else model_b
@@ -64,12 +75,17 @@ def calculate_aggressiveness_metrics(match_events_dir='match_events'):
     for model in model_stats:
         stats = model_stats[model]
         total_rounds = stats['total_betting_rounds']
+        total_hands = stats['total_hands']
+        
         if total_rounds > 0:
             stats['aggression_score'] = (
                 (stats['bets_initiated'] + stats['raises']) / total_rounds
             )
             stats['run_rate'] = stats['runs'] / total_rounds
             stats['accept_rate'] = stats['accepts'] / total_rounds
+        
+        if total_hands > 0:
+            stats['manilha_rate'] = stats['hands_with_manilha'] / total_hands
     
     return model_stats
 
@@ -198,20 +214,28 @@ def aggregate_results(match_dir='match_history'):
 
     print(f"Total matches: {positions['A']['wins'] + positions['A']['losses']}")
 
-    # Calculate and display aggressiveness metrics
-    print("\nModel Aggressiveness Metrics:")
-    print("-" * 100)
-    print(f"{'Model':<40} {'Aggr Score':>12} {'Bet Rate':>10} {'Run Rate':>10} {'Accept Rate':>12}")
-    print("-" * 100)
+    # Calculate and display model metrics
+    print("\nModel Metrics (sorted by aggression):")
+    print("-" * 120)
+    print(f"{'Model':<40} {'Aggr Score':>12} {'Bet Rate':>10} {'Run Rate':>10} {'Accept Rate':>12} {'Manilha Rate':>12}")
+    print("-" * 120)
     
-    aggr_stats = calculate_aggressiveness_metrics()
-    for model in sorted(results.keys()):
-        if model in aggr_stats and aggr_stats[model]['total_betting_rounds'] > 0:
-            stats = aggr_stats[model]
-            total_rounds = stats['total_betting_rounds']
-            bet_rate = stats['bets_initiated'] / total_rounds * 100
-            print(f"{model:<40} {stats['aggression_score']:>11.1%} {bet_rate:>9.1f}% "
-                  f"{stats['run_rate']:>9.1%} {stats['accept_rate']:>11.1%}")
+    model_stats = calculate_model_metrics()
+    
+    # Sort models by aggression score
+    sorted_models = sorted(
+        [m for m in results.keys() if m in model_stats and model_stats[m]['total_betting_rounds'] > 0],
+        key=lambda m: model_stats[m]['aggression_score'],
+        reverse=True
+    )
+    
+    for model in sorted_models:
+        stats = model_stats[model]
+        total_rounds = stats['total_betting_rounds']
+        bet_rate = stats['bets_initiated'] / total_rounds * 100
+        print(f"{model:<40} {stats['aggression_score']:>11.1%} {bet_rate:>9.1f}% "
+              f"{stats['run_rate']:>9.1%} {stats['accept_rate']:>11.1%} "
+              f"{stats['manilha_rate']:>11.1%}")
 
     # Save number of matches per model to JSON
     matches_per_model = {model: data['wins'] + data['losses'] 
