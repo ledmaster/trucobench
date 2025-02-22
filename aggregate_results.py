@@ -121,11 +121,14 @@ def aggregate_results(match_dir='match_history'):
 
 
     # Output the aggregated results.
-    print("\n🏆 Leaderboard (by ELO):")
+    print("\n🏆 Leaderboard (by ELO) - Models with 10+ matches:")
     print("-" * 100)
     print(f"{'Model':<40} {'ELO':>8} {'Wins':>6} {'Losses':>8} {'Win Rate':>10}")
     print("-" * 100)
     for model, data in sorted(results.items(), key=lambda item: -item[1]['elo']):
+        total_games = data['wins'] + data['losses']
+        if total_games < 10:
+            continue
         total_games = data['wins'] + data['losses']
         win_rate = (data['wins'] / total_games * 100) if total_games > 0 else 0
         print(f"{model:<40} {data['elo']:>8.1f} {data['wins']:>6} {data['losses']:>8} {win_rate:>9.1f}%")
