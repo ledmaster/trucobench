@@ -146,7 +146,6 @@ Estado atual do jogo:
 - Placar adversário: {game_state['opponent_score']}
 - Aposta atual: {game_state['current_bet']}
 - Rodada de apostas: {game_state['betting_round']}
-- Rodada de apostas: {game_state['betting_round']}
 - Histórico de apostas: {game_state['bet_history']}
 - Aposta pendente: {game_state['pending_bet'] if game_state['pending_bet'] else 'Nenhuma'}
 
@@ -285,6 +284,7 @@ Estado atual do jogo:
 - Manilhas: {game_state['manilhas']}
 - Seu placar: {game_state['my_score']}
 - Placar adversário: {game_state['opponent_score']}
+- Rodada de apostas: {game_state['betting_round']}
 - Aposta atual: {game_state['current_bet']}
 
 Força das cartas (da mais fraca para mais forte):
@@ -572,7 +572,7 @@ if __name__ == '__main__':
     #print(get_secret('OR_APP_NAME'))
     #import time
     #time.sleep(1000)
-    NUM_MATCHES = 1  # Set the number of matches to run in parallel
+    NUM_MATCHES = 16  # Set the number of matches to run in parallel
     # Load previous match counts
     try:
         with open('model_matches.json', 'r') as f:
@@ -585,17 +585,14 @@ if __name__ == '__main__':
         'gemini/gemini-2.0-flash-lite-preview-02-05',
         'gemini/gemini-2.0-flash',
         'gemini/gemini-2.0-flash-thinking-exp-01-21',
+        'gemini/gemini-1.5-pro',
         'openrouter/openai/gpt-4o-mini',
         'openrouter/openai/gpt-4o',
         'openrouter/openai/o3-mini',
         'openrouter/deepseek/deepseek-chat',
         'openrouter/deepseek/deepseek-r1',
-        'openrouter/deepseek/deepseek-r1-distill-qwen-32b',
-        'openrouter/deepseek/deepseek-r1-distill-llama-70b',
         'openrouter/anthropic/claude-3.5-sonnet',
         'openrouter/anthropic/claude-3.5-haiku',
-        'openrouter/meta-llama/llama-3.3-70b-instruct',
-        'openrouter/qwen/qwen-2.5-72b-instruct',
         'openrouter/qwen/qwen-max'
     ]
 
