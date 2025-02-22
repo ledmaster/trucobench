@@ -214,31 +214,32 @@ def aggregate_results(match_dir='match_history'):
 
     print(f"Total matches: {positions['A']['wins'] + positions['A']['losses']}")
 
-    # Calculate and display model metrics
-    print("\nModel Metrics (sorted by aggression):")
-    print("-" * 120)
-    print(f"{'Model':<40} {'Aggr Score':>12} {'Bet Rate':>10} {'Run Rate':>10} {'Accept Rate':>12} {'Manilha Rate':>12}")
-    print("-" * 120)
-    
-    model_stats = calculate_model_metrics()
-    
-    # Sort models by aggression score (only those with 10+ matches)
-    sorted_models = sorted(
-        [m for m in results.keys() 
-         if m in model_stats 
-         and model_stats[m]['total_betting_rounds'] > 0
-         and (results[m]['wins'] + results[m]['losses']) >= 10],
-        key=lambda m: model_stats[m]['aggression_score'],
-        reverse=True
-    )
-    
-    for model in sorted_models:
-        stats = model_stats[model]
-        total_rounds = stats['total_betting_rounds']
-        bet_rate = stats['bets_initiated'] / total_rounds * 100
-        print(f"{model:<40} {stats['aggression_score']:>11.1%} {bet_rate:>9.1f}% "
-              f"{stats['run_rate']:>9.1%} {stats['accept_rate']:>11.1%} "
-              f"{stats['manilha_rate']:>11.1%}")
+    if False:
+        # Calculate and display model metrics
+        print("\nModel Metrics (sorted by aggression):")
+        print("-" * 120)
+        print(f"{'Model':<40} {'Aggr Score':>12} {'Bet Rate':>10} {'Run Rate':>10} {'Accept Rate':>12} {'Manilha Rate':>12}")
+        print("-" * 120)
+        
+        model_stats = calculate_model_metrics()
+        
+        # Sort models by aggression score (only those with 10+ matches)
+        sorted_models = sorted(
+            [m for m in results.keys() 
+            if m in model_stats 
+            and model_stats[m]['total_betting_rounds'] > 0
+            and (results[m]['wins'] + results[m]['losses']) >= 10],
+            key=lambda m: model_stats[m]['aggression_score'],
+            reverse=True
+        )
+        
+        for model in sorted_models:
+            stats = model_stats[model]
+            total_rounds = stats['total_betting_rounds']
+            bet_rate = stats['bets_initiated'] / total_rounds * 100
+            print(f"{model:<40} {stats['aggression_score']:>11.1%} {bet_rate:>9.1f}% "
+                f"{stats['run_rate']:>9.1%} {stats['accept_rate']:>11.1%} "
+                f"{stats['manilha_rate']:>11.1%}")
 
     # Save number of matches per model to JSON
     matches_per_model = {model: data['wins'] + data['losses'] 
