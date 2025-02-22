@@ -595,16 +595,19 @@ if __name__ == '__main__':
         'openrouter/qwen/qwen-max'
     ]
 
-    # Filter out models with 30+ matches and calculate weights
+    # Calculate total matches across all models
+    total_matches = sum(model_matches.get(model.split('/')[-1], 0) for model in available_models)
+    
+    # Calculate UCB weights for each model
     active_models = []
     weights = []
     for model in available_models:
-        # Get match count, default to 0 if model not found
         matches = model_matches.get(model.split('/')[-1], 0)
-        if matches < 30:  # Only include models with less than 30 matches
+        if matches < 30:  # Still keep the max matches limit
             active_models.append(model)
-            # Weight is inverse square root of matches + 1 (to handle 0 matches)
-            weight = 1 / math.sqrt(matches + 1)
+            # UCB formula: sqrt(ln(total_matches)/(matches + 1))
+            # Add 1 to matches to handle 0 matches case
+            weight = math.sqrt(math.log(total_matches + 1)/(matches + 1))
             weights.append(weight)
     
     if len(active_models) < 2:
