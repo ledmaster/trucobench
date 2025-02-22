@@ -222,9 +222,12 @@ def aggregate_results(match_dir='match_history'):
     
     model_stats = calculate_model_metrics()
     
-    # Sort models by aggression score
+    # Sort models by aggression score (only those with 10+ matches)
     sorted_models = sorted(
-        [m for m in results.keys() if m in model_stats and model_stats[m]['total_betting_rounds'] > 0],
+        [m for m in results.keys() 
+         if m in model_stats 
+         and model_stats[m]['total_betting_rounds'] > 0
+         and (results[m]['wins'] + results[m]['losses']) >= 10],
         key=lambda m: model_stats[m]['aggression_score'],
         reverse=True
     )
