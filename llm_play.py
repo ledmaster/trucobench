@@ -596,15 +596,23 @@ if __name__ == '__main__':
         'openrouter/qwen/qwen-max'
     ]
 
-    # Calculate weights based on previous matches
+    # Filter out models with 30+ matches and calculate weights
+    active_models = []
     weights = []
     for model in available_models:
         # Get match count, default to 0 if model not found
         matches = model_matches.get(model.split('/')[-1], 0)
-        # Weight is inverse square root of matches + 1 (to handle 0 matches)
-        weight = 1 / math.sqrt(matches + 1)
-        weights.append(weight)
-    print('Sampling weights', {model: weight for model, weight in zip(available_models, weights)})
+        if matches < 30:  # Only include models with less than 30 matches
+            active_models.append(model)
+            # Weight is inverse square root of matches + 1 (to handle 0 matches)
+            weight = 1 / math.sqrt(matches + 1)
+            weights.append(weight)
+    
+    if len(active_models) < 2:
+        print("Not enough active models to play matches (need at least 2)")
+        sys.exit(1)
+        
+    print('Active models and weights:', {model: weight for model, weight in zip(active_models, weights)})
     executor = ThreadPoolExecutor(max_workers=8)
     try:
         futures = [
@@ -614,7 +622,7 @@ if __name__ == '__main__':
                 model_B=models[1],
             )
             for _ in range(NUM_MATCHES)
-            for models in [get_model_pair(available_models, weights)]
+            for models in [get_model_pair(active_models, weights)]
         ]
         for future in as_completed(futures):
             future.result()
