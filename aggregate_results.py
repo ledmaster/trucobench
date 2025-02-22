@@ -121,7 +121,7 @@ def aggregate_results(match_dir='match_history'):
 
 
     # Output the aggregated results.
-    print("\n🏆 Leaderboard (by ELO) - Models with 10+ matches:")
+    print("\nLeaderboard (by ELO) - Models with 10+ matches:")
     print("-" * 100)
     print(f"{'Model':<40} {'ELO':>8} {'Wins':>6} {'Losses':>8} {'Win Rate':>10}")
     print("-" * 100)
