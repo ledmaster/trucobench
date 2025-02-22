@@ -207,7 +207,12 @@ def aggregate_results(match_dir='match_history'):
             continue
         total_games = data['wins'] + data['losses']
         win_rate = (data['wins'] / total_games * 100) if total_games > 0 else 0
-        print(f"{model:<40} {data['elo']:>8.1f} {data['wins']:>6} {data['losses']:>8} {win_rate:>9.1f}%")
+        model_display = model
+        if total_games >= 30:
+            model_display = f"✅ {model}"
+        else:
+            model_display = f"❌ {model}"
+        print(f"{model_display:<40} {data['elo']:>8.1f} {data['wins']:>6} {data['losses']:>8} {win_rate:>9.1f}%")
     print("\nAggregated Results by Player Position:")
     for pos, data in sorted(positions.items(), key=lambda item: (-item[1]['wins'], item[1]['losses'])):
         print(f"Player {pos} - Wins: {data['wins']}, Losses: {data['losses']}")
