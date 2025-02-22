@@ -13,6 +13,66 @@ def calculate_elo_change(winner_elo, loser_elo, k_factor=32):
 
 
 
+def calculate_aggressiveness_metrics(match_events_dir='match_events'):
+    """Calculate betting and running patterns for each model"""
+    model_stats = {}
+    
+    # Get all match event files
+    files = glob.glob(os.path.join(match_events_dir, '*.jsonl'))
+    
+    for file in files:
+        with open(file, 'r') as f:
+            # Read the first line to get model names
+            first_event = json.loads(f.readline())
+            if first_event['type'] != 'match_start':
+                continue
+                
+            model_a = first_event['data']['model_a'].split('/')[-1]
+            model_b = first_event['data']['model_b'].split('/')[-1]
+            
+            # Initialize stats if needed
+            for model in [model_a, model_b]:
+                if model not in model_stats:
+                    model_stats[model] = {
+                        'total_betting_rounds': 0,
+                        'bets_initiated': 0,
+                        'runs': 0,
+                        'accepts': 0,
+                        'raises': 0
+                    }
+            
+            # Process all events
+            for line in f:
+                event = json.loads(line)
+                if event['type'] == 'betting_action':
+                    action = event['data']['action']
+                    player = event['data']['player']
+                    model = model_a if player == 'A' else model_b
+                    
+                    if action == 'bet':
+                        model_stats[model]['bets_initiated'] += 1
+                    elif action == 'run':
+                        model_stats[model]['runs'] += 1
+                    elif action == 'accept':
+                        model_stats[model]['accepts'] += 1
+                    elif action == 'raise':
+                        model_stats[model]['raises'] += 1
+                    
+                    model_stats[model]['total_betting_rounds'] += 1
+    
+    # Calculate derived metrics
+    for model in model_stats:
+        stats = model_stats[model]
+        total_rounds = stats['total_betting_rounds']
+        if total_rounds > 0:
+            stats['aggression_score'] = (
+                (stats['bets_initiated'] + stats['raises']) / total_rounds
+            )
+            stats['run_rate'] = stats['runs'] / total_rounds
+            stats['accept_rate'] = stats['accepts'] / total_rounds
+    
+    return model_stats
+
 def aggregate_results(match_dir='match_history'):
     # Aggregated results: { model: { 'wins': int, 'losses': int, 'cost': float, 'elo': float } }
     results = {}
@@ -137,6 +197,21 @@ def aggregate_results(match_dir='match_history'):
         print(f"Player {pos} - Wins: {data['wins']}, Losses: {data['losses']}")
 
     print(f"Total matches: {positions['A']['wins'] + positions['A']['losses']}")
+
+    # Calculate and display aggressiveness metrics
+    print("\nModel Aggressiveness Metrics:")
+    print("-" * 100)
+    print(f"{'Model':<40} {'Aggr Score':>12} {'Bet Rate':>10} {'Run Rate':>10} {'Accept Rate':>12}")
+    print("-" * 100)
+    
+    aggr_stats = calculate_aggressiveness_metrics()
+    for model in sorted(results.keys()):
+        if model in aggr_stats and aggr_stats[model]['total_betting_rounds'] > 0:
+            stats = aggr_stats[model]
+            total_rounds = stats['total_betting_rounds']
+            bet_rate = stats['bets_initiated'] / total_rounds * 100
+            print(f"{model:<40} {stats['aggression_score']:>11.1%} {bet_rate:>9.1f}% "
+                  f"{stats['run_rate']:>9.1%} {stats['accept_rate']:>11.1%}")
 
     # Save number of matches per model to JSON
     matches_per_model = {model: data['wins'] + data['losses'] 
