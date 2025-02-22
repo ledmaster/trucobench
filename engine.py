@@ -119,7 +119,7 @@ class TrucoEngine:
                 'twelve': []
             }
             if bet_type not in valid_sequence[last_bet]:
-                raise ValueError("Invalid bet sequence")
+                raise ValueError(f"Invalid bet sequence - last bet was {last_bet} - Player {team} tried to bet {bet_type}")
             
         self.bet_stack.append({
             'type': bet_type,
