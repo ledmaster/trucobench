@@ -214,12 +214,13 @@ class TrucoEngine:
             self.current_betting_player = 1 - self.current_betting_player
             self.pending_bet_response = True
         elif action['action'] == 'accept':
-            if not self.pending_bet_response or not self.bet_stack:
+            if self.pending_bet_response is not True or not self.bet_stack:
                 raise ValueError(f"Cannot accept when there is no pending bet - Bet stack: {self.bet_stack}, Pending: {self.pending_bet_response}")
             # When accepting a bet, use the value from the last bet
             self.current_bet = self.bet_stack[-1]['value']
             self.betting_complete = True
             self.bet_accepted = True
+            self.pending_bet_response = False  # Clear pending state after acceptance
         elif action['action'] == 'run':
             self.run_from_bet(player_idx)
             self.betting_complete = True
