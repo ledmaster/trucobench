@@ -572,7 +572,7 @@ if __name__ == '__main__':
     #print(get_secret('OR_APP_NAME'))
     #import time
     #time.sleep(1000)
-    NUM_MATCHES = 16  # Set the number of matches to run in parallel
+    NUM_MATCHES = 32  # Set the number of matches to run in parallel
     # Load previous match counts
     try:
         with open('model_matches.json', 'r') as f:
@@ -584,7 +584,6 @@ if __name__ == '__main__':
     available_models = [
         'gemini/gemini-2.0-flash-lite-preview-02-05',
         'gemini/gemini-2.0-flash',
-        'gemini/gemini-2.0-flash-thinking-exp-01-21',
         'gemini/gemini-1.5-pro',
         'openrouter/openai/gpt-4o-mini',
         'openrouter/openai/gpt-4o',
