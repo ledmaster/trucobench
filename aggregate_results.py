@@ -122,8 +122,13 @@ def list_model_matches(model_name, match_dir='match_history'):
         model_a = m_a.group(1).strip().lower()
         model_b = m_b.group(1).strip().lower()
 
+        # Extract base model names (remove provider prefix if present)
+        model_a_base = model_a.split('/')[-1]
+        model_b_base = model_b.split('/')[-1]
+        model_name_base = model_name.split('/')[-1]
+
         # Check if this match involves our model
-        if model_name not in [model_a, model_b]:
+        if model_name_base not in [model_a_base, model_b_base]:
             continue
 
         # Extract other match details
@@ -136,7 +141,7 @@ def list_model_matches(model_name, match_dir='match_history'):
             continue
 
         # Determine if our model was player A or B
-        is_player_a = model_name == model_a
+        is_player_a = model_name_base == model_a_base
         opponent = model_b if is_player_a else model_a
         score_a = int(m_scores.group(1))
         score_b = int(m_scores.group(2))
