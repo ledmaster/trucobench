@@ -579,7 +579,7 @@ if __name__ == '__main__':
                        help='The LLM model to test against others')
     args = parser.parse_args()
 
-    NUM_MATCHES = 16  # Set the number of matches to run in parallel
+    NUM_MATCHES = 4  # Set the number of matches to run in parallel
     
     # Load previous match counts
     try:
@@ -627,9 +627,9 @@ if __name__ == '__main__':
     def get_test_pair(chosen_model, active_models, weights):
         """Select chosen model vs another active model (random team assignment)"""
         opponent_models = [m for m in active_models if m != chosen_model]
-        opponent_weights = [w for m, w in zip(active_models, weights) if m != chosen_model]
-        
-        opponent = random.choices(opponent_models, weights=opponent_weights, k=1)[0]
+        #opponent_weights = [w for m, w in zip(active_models, weights) if m != chosen_model]
+        #opponent = random.choices(opponent_models, weights=opponent_weights, k=1)[0]
+        opponent = random.choices(opponent_models, k=1)[0]
         return random.choice([(chosen_model, opponent), (opponent, chosen_model)])
 
     if len(active_models) < 2:
@@ -638,7 +638,7 @@ if __name__ == '__main__':
         
     print('Active models and weights:', {model: weight for model, weight in zip(active_models, weights)})
     
-    executor = ThreadPoolExecutor(max_workers=get_openrouter_credits())
+    executor = ThreadPoolExecutor(max_workers=min(get_openrouter_credits(), 8))
     try:
         futures = [
             executor.submit(

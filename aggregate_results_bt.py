@@ -33,7 +33,7 @@ def bradley_terry_scores(wins_matrix):
         bt_likelihood,
         initial_ratings,
         method='BFGS',
-        options={'maxiter': 100}
+        options={'maxiter': 1000}
     )
     
     # Return normalized ratings

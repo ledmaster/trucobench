@@ -309,7 +309,7 @@ Exemplo:
                                     extra_body={
                                         "include_reasoning": True,
                                         "provider": {
-                                            "sort":"throughput",
+                                            "sort":"throughput"
                                         }
                                     })
             else:
@@ -621,7 +621,7 @@ if __name__ == '__main__':
         sys.exit(1)
         
     print('Active models and weights:', {model: weight for model, weight in zip(active_models, weights)})
-    executor = ThreadPoolExecutor(max_workers=get_openrouter_credits())
+    executor = ThreadPoolExecutor(max_workers=min(get_openrouter_credits(), 8))
     try:
         futures = [
             executor.submit(
