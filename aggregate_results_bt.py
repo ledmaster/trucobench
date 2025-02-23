@@ -3,6 +3,7 @@ import os
 import glob
 import re
 import json
+import math
 
 def calculate_elo_change(winner_elo, loser_elo, k_factor=32):
     """Calculate ELO rating changes after a match"""
@@ -276,7 +277,7 @@ def aggregate_results(match_dir='match_history'):
     # Output the aggregated results.
     print("\nLeaderboard (by ELO) - Models with 10+ matches:")
     print("-" * 100)
-    print(f"{'Model':<40} {'ELO':>8} {'Wins':>6} {'Losses':>8} {'Win Rate':>10}")
+    print(f"{'Model':<40} {'BT Rating':>8} {'Wins':>6} {'Losses':>8} {'Win Rate':>10}")
     print("-" * 100)
     for model, data in sorted(results.items(), key=lambda item: -item[1]['elo']):
         total_games = data['wins'] + data['losses']
