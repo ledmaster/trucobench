@@ -5,6 +5,7 @@ import re
 import json
 import math
 import numpy as np
+import polars as pl
 from scipy import optimize
 
 def bradley_terry_scores(wins_matrix):
@@ -213,6 +214,33 @@ def list_model_matches(model_name, match_dir='match_history'):
         
         print(f"{match_uuid:<20} {opponent:<40} {result:<10} {score_str:<15} ${cost:.2f}")
 
+def create_bt_leaderboard_df(results, min_matches=20):
+    """Create a polars DataFrame with Bradley-Terry leaderboard data"""
+    records = []
+    
+    for model, data in results.items():
+        total_games = data['wins'] + data['losses']
+        if total_games < min_matches:
+            continue
+            
+        win_rate = (data['wins'] / total_games * 100) if total_games > 0 else 0
+        qualified = "✅" if total_games >= 30 else "❌"
+        
+        records.append({
+            "status": qualified,
+            "model": model,
+            "bt_rating": round(data['bt_rating'], 2),
+            "wins": data['wins'],
+            "losses": data['losses'],
+            "win_rate": round(win_rate, 1)
+        })
+    
+    if not records:
+        return None
+        
+    df = pl.DataFrame(records)
+    return df.sort("bt_rating", descending=True)
+
 def aggregate_results(match_dir='match_history'):
     # Aggregated results: { model: { 'wins': int, 'losses': int, 'cost': float, 'elo': float } }
     results = {}
@@ -330,22 +358,11 @@ def aggregate_results(match_dir='match_history'):
     # Calculate Bradley-Terry ratings using head-to-head records
     update_bt_ratings(results, head_to_head)
     
-    print("\nLeaderboard (by Bradley-Terry Rating) - Models with 10+ matches:")
-    print("-" * 100)
-    print(f"{'Model':<40} {'BT Rating':>8} {'Wins':>6} {'Losses':>8} {'Win Rate':>10}")
-    print("-" * 100)
-    for model, data in sorted(results.items(), key=lambda item: -item[1]['bt_rating']):
-        total_games = data['wins'] + data['losses']
-        if total_games < 20:
-            continue
-        total_games = data['wins'] + data['losses']
-        win_rate = (data['wins'] / total_games * 100) if total_games > 0 else 0
-        model_display = model
-        if total_games >= 30:
-            model_display = f"✅ {model}"
-        else:
-            model_display = f"❌ {model}"
-        print(f"{model_display:<40} {data['bt_rating']:>8.2f} {data['wins']:>6} {data['losses']:>8} {win_rate:>9.1f}%")
+    # Create and display the BT leaderboard
+    df = create_bt_leaderboard_df(results)
+    if df is not None:
+        print("\nLeaderboard (by Bradley-Terry Rating) - Models with 20+ matches:")
+        print(df.to_markdown())
     print("\nAggregated Results by Player Position:")
     for pos, data in sorted(positions.items(), key=lambda item: (-item[1]['wins'], item[1]['losses'])):
         print(f"Player {pos} - Wins: {data['wins']}, Losses: {data['losses']}")
