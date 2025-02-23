@@ -169,6 +169,9 @@ def aggregate_results(match_dir='match_history'):
         'A': {'wins': 0, 'losses': 0, 'cost': 0.0},
         'B': {'wins': 0, 'losses': 0, 'cost': 0.0}
     }
+    
+    # Track match pairs and their frequency
+    match_pairs = {}
 
     # Get all .jsonl files in the match events folder
     files = glob.glob(os.path.join(match_dir, '*.txt'))
@@ -229,6 +232,10 @@ def aggregate_results(match_dir='match_history'):
             results[model_a] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'elo': 1000}
         if model_b not in results:
             results[model_b] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'elo': 1000}
+            
+        # Track this match pair
+        pair = tuple(sorted([model_a, model_b]))
+        match_pairs[pair] = match_pairs.get(pair, 0) + 1
 
         # Calculate and update ELO ratings
         if winner == 'A':
@@ -288,6 +295,12 @@ def aggregate_results(match_dir='match_history'):
         print(f"Player {pos} - Wins: {data['wins']}, Losses: {data['losses']}")
 
     print(f"Total matches: {positions['A']['wins'] + positions['A']['losses']}")
+    
+    # Find and display the most frequent match pair
+    if match_pairs:
+        most_frequent_pair = max(match_pairs.items(), key=lambda x: x[1])
+        print(f"\nMost frequent match: {most_frequent_pair[0][0]} vs {most_frequent_pair[0][1]} "
+              f"({most_frequent_pair[1]} matches)")
 
     if False:
         # Calculate and display model metrics
