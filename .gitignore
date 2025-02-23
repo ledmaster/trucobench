@@ -1,1 +1,8 @@
 .aider*
+match_events.py
+llm_play_single.py
+aggregate_results.py
+engine_tests.py
+human_readable_match.py
+verify.py
+aggregate_results_bt.py
