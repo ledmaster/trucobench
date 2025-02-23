@@ -16,6 +16,8 @@ Algumas inspirações:
 
 ## Resultados
 
+**⭐ Tá gostando? Deixe uma estrela!**
+
 Os LLMs jogaram diversas partidas entre si.
 
 Abaixo, confira a tabela com os resultados e depois explore algumas análises que destacam os pontos fortes e as peculiaridades de cada modelo.
