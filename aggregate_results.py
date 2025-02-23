@@ -88,6 +88,74 @@ def calculate_model_metrics(match_events_dir='match_events'):
     
     return model_stats
 
+def list_model_matches(model_name, match_dir='match_history'):
+    """List all matches for a specific model"""
+    model_name = model_name.lower()
+    files = glob.glob(os.path.join(match_dir, '*.txt'))
+    if not files:
+        print(f"No match files found in directory: {match_dir}")
+        return
+
+    # Regex patterns to extract needed info from the match file:
+    timestamp_pattern = r"🕒 Timestamp: (.+)"
+    model_a_pattern = r"🤖 Player A Model: (.+)"
+    model_b_pattern = r"🤖 Player B Model: (.+)"
+    scores_pattern = r"🏁 \*\*Match Final Scores:\*\* Player A: (\d+), Player B: (\d+)"
+    winner_pattern = r"🏆 \*\*Match Winner:\*\* Player ([AB])"
+    cost_pattern = r"💸 \*\*LLM Costs:\*\* Player A: \$([0-9.]+), Player B: \$([0-9.]+)"
+
+    print(f"\nMatches for model: {model_name}")
+    print("-" * 100)
+    print(f"{'Timestamp':<20} {'Opponent':<40} {'Result':<10} {'Score':<15} {'Cost':<10}")
+    print("-" * 100)
+
+    for file in files:
+        with open(file, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # Extract both players' model names
+        m_a = re.search(model_a_pattern, content)
+        m_b = re.search(model_b_pattern, content)
+        if not m_a or not m_b:
+            continue
+            
+        model_a = m_a.group(1).strip().lower()
+        model_b = m_b.group(1).strip().lower()
+
+        # Check if this match involves our model
+        if model_name not in [model_a, model_b]:
+            continue
+
+        # Extract other match details
+        m_timestamp = re.search(timestamp_pattern, content)
+        m_scores = re.search(scores_pattern, content)
+        m_winner = re.search(winner_pattern, content)
+        m_cost = re.search(cost_pattern, content)
+        
+        if not all([m_timestamp, m_scores, m_winner, m_cost]):
+            continue
+
+        # Determine if our model was player A or B
+        is_player_a = model_name == model_a
+        opponent = model_b if is_player_a else model_a
+        score_a = int(m_scores.group(1))
+        score_b = int(m_scores.group(2))
+        cost = float(m_cost.group(1)) if is_player_a else float(m_cost.group(2))
+        winner = m_winner.group(1)
+        
+        # Format the result
+        if (winner == 'A' and is_player_a) or (winner == 'B' and not is_player_a):
+            result = "Won"
+        else:
+            result = "Lost"
+        
+        # Format the score from our model's perspective
+        our_score = score_a if is_player_a else score_b
+        opp_score = score_b if is_player_a else score_a
+        score_str = f"{our_score}-{opp_score}"
+        
+        print(f"{m_timestamp.group(1):<20} {opponent:<40} {result:<10} {score_str:<15} ${cost:.2f}")
+
 def aggregate_results(match_dir='match_history'):
     # Aggregated results: { model: { 'wins': int, 'losses': int, 'cost': float, 'elo': float } }
     results = {}
@@ -250,4 +318,13 @@ def aggregate_results(match_dir='match_history'):
         json.dump(matches_per_model, f, indent=2)
 
 if __name__ == '__main__':
-    aggregate_results()
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Analyze Truco match results')
+    parser.add_argument('--model', type=str, help='List all matches for a specific model')
+    args = parser.parse_args()
+    
+    if args.model:
+        list_model_matches(args.model)
+    else:
+        aggregate_results()
