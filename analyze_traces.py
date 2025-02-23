@@ -4,6 +4,12 @@ import json
 from litellm import completion
 
 def main():
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Analyze a specific match trace file')
+    parser.add_argument('filename', help='Name of the match trace file to analyze')
+    args = parser.parse_args()
+
     # Define directories
     match_history_dir = 'match_traces'
     analysis_dir = 'trace_analysis'
@@ -13,10 +19,7 @@ def main():
     with open('analyst_prompt.txt', 'r', encoding='utf-8') as prompt_file:
         verifier_prompt_template = prompt_file.read()
 
-    # Iterate over each file in the match_history folder
-    for filename in os.listdir(match_history_dir)[:1]:
-        filename = "match_trace_20250222_194616_533e35a9.jsonl"
-        file_path = os.path.join(match_history_dir, filename)
+    file_path = os.path.join(match_history_dir, args.filename)
         print(file_path)
         if os.path.isfile(file_path):
             # Determine the corresponding analysis file path and skip if it exists
@@ -65,7 +68,6 @@ def main():
                 match_history_text += "-" * 40 + "\n"
 
             print(match_history_text)
-            return
             # Prepare the complete prompt
             prompt = verifier_prompt_template.format(log=match_history_text)
             # Send the prompt to the LLM using litellm (adjust the API call if needed)
