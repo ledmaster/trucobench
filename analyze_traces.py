@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import json
 from litellm import completion
 
 def main():
@@ -25,13 +26,44 @@ def main():
                 print(f"Verification for {filename} already exists, skipping.")
                 continue
 
-            # Open and read the match file content
+            # Open and read the match file content, extracting choices content
+            extracted_content = []
             with open(file_path, 'r', encoding='utf-8') as match_file:
-                match_history_text = match_file.read()
+                for line in match_file:
+                    try:
+                        data = json.loads(line)
+                        if 'response' in data and 'choices' in data['response']:
+                            for choice in data['response']['choices']:
+                                content = choice['message'].get('content', '')
+                                reasoning = choice['message'].get('reasoning')
+                                
+                                entry = {
+                                    'timestamp': data['timestamp'],
+                                    'model': data['model'],
+                                    'player': data['player'],
+                                    'action_type': data['action_type'],
+                                    'content': content,
+                                    'reasoning': reasoning
+                                }
+                                extracted_content.append(entry)
+                    except json.JSONDecodeError:
+                        print(f"Warning: Could not parse line in {filename}")
+                        continue
 
-            # Prepare the complete prompt by replacing the placeholder in the template
+            # Format the extracted content into readable text
+            match_history_text = ""
+            for entry in extracted_content:
+                match_history_text += f"Time: {entry['timestamp']}\n"
+                match_history_text += f"Model: {entry['model']}\n"
+                match_history_text += f"Player: {entry['player']}\n"
+                match_history_text += f"Action: {entry['action_type']}\n"
+                match_history_text += f"Response: {entry['content']}\n"
+                if entry['reasoning']:
+                    match_history_text += f"Reasoning: {entry['reasoning']}\n"
+                match_history_text += "-" * 40 + "\n"
+
+            # Prepare the complete prompt
             prompt = verifier_prompt_template.format(readable_match_history=match_history_text)
-            #print(prompt)
             # Send the prompt to the LLM using litellm (adjust the API call if needed)
             messages = [{"role": "user", "content": prompt}]
             response = completion(model='openrouter/openai/o3-mini',
