@@ -70,10 +70,13 @@ def main():
             prompt = verifier_prompt_template.format(log=match_history_text)
             # Send the prompt to the LLM using litellm (adjust the API call if needed)
             messages = [{"role": "user", "content": prompt}]
-            #response = completion(model='openrouter/openai/o3-mini',
-            #                      messages=messages)
-
-            analysis_output = response.choices[0].message.content
+            try:
+                response = completion(model='openrouter/openai/o3-mini',
+                                    messages=messages)
+                analysis_output = response.choices[0].message.content
+            except Exception as e:
+                print(f"Error getting analysis for {filename}: {str(e)}")
+                continue
 
             # Construct the output filename and write the analysis answer there
             base_name, _ = os.path.splitext(filename)
