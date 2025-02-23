@@ -3,6 +3,7 @@ from pathlib import Path
 import json
 import math
 import random
+import argparse
 from engine import TrucoEngine
 from human_readable_match import format_match_events
 from litellm import completion, completion_cost
@@ -573,10 +574,13 @@ def get_openrouter_credits():
     return round(data['data']['total_credits'] - data['data']['total_usage'])
 
 if __name__ == '__main__':
-    #print(get_openrouter_credits())
-    #import time
-    #time.sleep(1000)
+    parser = argparse.ArgumentParser(description='Run Truco matches between LLMs.')
+    parser.add_argument('--chosen-model', type=str, required=True,
+                       help='The LLM model to test against others')
+    args = parser.parse_args()
+
     NUM_MATCHES = 16  # Set the number of matches to run in parallel
+    
     # Load previous match counts
     try:
         with open('model_matches.json', 'r') as f:
@@ -584,7 +588,6 @@ if __name__ == '__main__':
     except FileNotFoundError:
         model_matches = {}
 
-    # Lista de modelos disponíveis (deve ter pelo menos 2)
     available_models = [
         'gemini/gemini-2.0-flash-lite-preview-02-05',
         'gemini/gemini-2.0-flash',
@@ -604,33 +607,47 @@ if __name__ == '__main__':
     # Calculate total matches across all models
     total_matches = sum(model_matches.get(model.split('/')[-1], 0) for model in available_models)
     
-    # Calculate UCB weights for each model
+    # Calculate UCB weights with special handling for chosen model
     active_models = []
     weights = []
     for model in available_models:
-        matches = model_matches.get(model.split('/')[-1], 0)
-        if matches < 30:  # Still keep the max matches limit
+        model_name = model.split('/')[-1]
+        matches = model_matches.get(model_name, 0)
+        
+        # Always include chosen model even if over match limit
+        if model == args.chosen_model:
             active_models.append(model)
-            # UCB formula: sqrt(ln(total_matches)/(matches + 1))
-            # Add 1 to matches to handle 0 matches case
             weight = math.sqrt(math.log(total_matches + 1)/(matches + 1))
             weights.append(weight)
-    
+        elif matches < 30:
+            active_models.append(model)
+            weight = math.sqrt(math.log(total_matches + 1)/(matches + 1))
+            weights.append(weight)
+
+    def get_test_pair(chosen_model, active_models, weights):
+        """Select chosen model vs another active model (random team assignment)"""
+        opponent_models = [m for m in active_models if m != chosen_model]
+        opponent_weights = [w for m, w in zip(active_models, weights) if m != chosen_model]
+        
+        opponent = random.choices(opponent_models, weights=opponent_weights, k=1)[0]
+        return random.choice([(chosen_model, opponent), (opponent, chosen_model)])
+
     if len(active_models) < 2:
         print("Not enough active models to play matches (need at least 2)")
         sys.exit(1)
         
     print('Active models and weights:', {model: weight for model, weight in zip(active_models, weights)})
+    
     executor = ThreadPoolExecutor(max_workers=get_openrouter_credits())
     try:
         futures = [
             executor.submit(
                 play_match,
-                model_A=models[0],
-                model_B=models[1],
+                model_A=pair[0],
+                model_B=pair[1],
             )
             for _ in range(NUM_MATCHES)
-            for models in [get_model_pair(active_models, weights)]
+            for pair in [get_test_pair(args.chosen_model, active_models, weights)]
         ]
         for future in as_completed(futures):
             future.result()
