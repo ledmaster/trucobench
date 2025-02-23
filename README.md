@@ -71,11 +71,13 @@ Com uma mão relativamente forte e estando perdendo, vale a pena aumentar a apos
 ## Quão séria é essa benchmark?
 
 > "Todas as benchmarks estão erradas, mas algumas são úteis."
+> 
 > ***Machado de Assis***
 
 ⚠️ Esta benchmark foi um exercício para eu aprender mais sobre avaliações de LLMs e sobre o comportamento deles com prompts em português numa atividade que exige planejamento e "raciocínio" (ou algo parecido). Certamente existem bugs que, por mais que eu tenha verificado e testado, ainda estão no código. Então não considere essa (ou qualque outra) benchmark uma medida perfeita das capacidades dos LLMs. Além disso, a qualidade dos resultados pode variar dependendo do modelo e do prompt. Aqui sigo a seguinte recomendação:
 
 > "Por favor, tente garantir que os bugs afetem todos os modelos de forma igual."
+> 
 > ***[Ms. Casey, Lumon Industries](https://severance.wiki/half_loop_transcript)***
 
 ## Visão Geral do Código
