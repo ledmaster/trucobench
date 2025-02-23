@@ -32,8 +32,8 @@ def main():
 
         # Open and read the match file content, extracting choices content
         extracted_content = []
-            with open(file_path, 'r', encoding='utf-8') as match_file:
-                for line in match_file:
+        with open(file_path, 'r', encoding='utf-8') as match_file:
+            for line in match_file:
                     try:
                         data = json.loads(line)
                         if 'response' in data and 'choices' in data['response']:
