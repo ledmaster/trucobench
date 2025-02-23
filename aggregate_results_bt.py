@@ -4,12 +4,66 @@ import glob
 import re
 import json
 import math
+import numpy as np
+from scipy import optimize
 
-def calculate_elo_change(winner_elo, loser_elo, k_factor=32):
-    """Calculate ELO rating changes after a match"""
-    expected_winner = 1 / (1 + 10**((loser_elo - winner_elo) / 400))
-    elo_change = k_factor * (1 - expected_winner)
-    return elo_change
+def bradley_terry_scores(wins_matrix):
+    """Calculate Bradley-Terry scores from a wins matrix"""
+    n_players = len(wins_matrix)
+    
+    def bt_likelihood(ratings):
+        # Normalize ratings to sum to 0
+        ratings = ratings - np.mean(ratings)
+        total_ll = 0
+        for i in range(n_players):
+            for j in range(n_players):
+                if i != j:
+                    # Calculate probability of i beating j
+                    p_ij = 1 / (1 + np.exp(-(ratings[i] - ratings[j])))
+                    # Add to log likelihood
+                    if wins_matrix[i][j] > 0:
+                        total_ll += wins_matrix[i][j] * np.log(p_ij)
+        return -total_ll  # Return negative since we're minimizing
+
+    # Initial guess: all players equal
+    initial_ratings = np.zeros(n_players)
+    
+    # Optimize to find maximum likelihood ratings
+    result = optimize.minimize(
+        bt_likelihood,
+        initial_ratings,
+        method='BFGS',
+        options={'maxiter': 100}
+    )
+    
+    # Return normalized ratings
+    return result.x - np.mean(result.x)
+
+def update_bt_ratings(results_dict):
+    """Update Bradley-Terry ratings for all models"""
+    models = list(results_dict.keys())
+    n_models = len(models)
+    
+    # Create wins matrix
+    wins = np.zeros((n_models, n_models))
+    for i, model_i in enumerate(models):
+        for j, model_j in enumerate(models):
+            if i != j:
+                # Count matches between these models
+                pair = tuple(sorted([model_i, model_j]))
+                total_matches = match_pairs.get(pair, 0)
+                if total_matches > 0:
+                    # Estimate wins based on overall win rate when they played
+                    model_i_wins = (results_dict[model_i]['wins'] / 
+                                  (results_dict[model_i]['wins'] + results_dict[model_i]['losses']))
+                    wins[i][j] = total_matches * model_i_wins
+
+    # Calculate Bradley-Terry scores
+    bt_scores = bradley_terry_scores(wins)
+    
+    # Update ratings in results dictionary
+    for i, model in enumerate(models):
+        results_dict[model]['bt_rating'] = bt_scores[i]
 
 
 
@@ -230,23 +284,13 @@ def aggregate_results(match_dir='match_history'):
 
         # Initialize an entry for each model if not already present
         if model_a not in results:
-            results[model_a] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'elo': 1000}
+            results[model_a] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'bt_rating': 0.0}
         if model_b not in results:
-            results[model_b] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'elo': 1000}
+            results[model_b] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'bt_rating': 0.0}
             
         # Track this match pair
         pair = tuple(sorted([model_a, model_b]))
         match_pairs[pair] = match_pairs.get(pair, 0) + 1
-
-        # Calculate and update ELO ratings
-        if winner == 'A':
-            elo_change = calculate_elo_change(results[model_a]['elo'], results[model_b]['elo'])
-            results[model_a]['elo'] += elo_change
-            results[model_b]['elo'] -= elo_change
-        else:
-            elo_change = calculate_elo_change(results[model_b]['elo'], results[model_a]['elo'])
-            results[model_b]['elo'] += elo_change
-            results[model_a]['elo'] -= elo_change
 
         # Update wins/losses based on the match winner.
         if winner == 'A':
@@ -275,11 +319,14 @@ def aggregate_results(match_dir='match_history'):
 
 
     # Output the aggregated results.
-    print("\nLeaderboard (by ELO) - Models with 10+ matches:")
+    # Calculate Bradley-Terry ratings
+    update_bt_ratings(results)
+    
+    print("\nLeaderboard (by Bradley-Terry Rating) - Models with 10+ matches:")
     print("-" * 100)
     print(f"{'Model':<40} {'BT Rating':>8} {'Wins':>6} {'Losses':>8} {'Win Rate':>10}")
     print("-" * 100)
-    for model, data in sorted(results.items(), key=lambda item: -item[1]['elo']):
+    for model, data in sorted(results.items(), key=lambda item: -item[1]['bt_rating']):
         total_games = data['wins'] + data['losses']
         if total_games < 20:
             continue
@@ -290,7 +337,7 @@ def aggregate_results(match_dir='match_history'):
             model_display = f"✅ {model}"
         else:
             model_display = f"❌ {model}"
-        print(f"{model_display:<40} {data['elo']:>8.1f} {data['wins']:>6} {data['losses']:>8} {win_rate:>9.1f}%")
+        print(f"{model_display:<40} {data['bt_rating']:>8.2f} {data['wins']:>6} {data['losses']:>8} {win_rate:>9.1f}%")
     print("\nAggregated Results by Player Position:")
     for pos, data in sorted(positions.items(), key=lambda item: (-item[1]['wins'], item[1]['losses'])):
         print(f"Player {pos} - Wins: {data['wins']}, Losses: {data['losses']}")
