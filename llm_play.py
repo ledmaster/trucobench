@@ -1,15 +1,4 @@
 import os
-os.environ["OR_APP_NAME"] = "TrucoArena"
-os.environ["OR_SITE_URL"] = "https://mariofilho.com"
-
-from datetime import datetime, timezone
-import uuid
-
-def generate_match_id():
-    """Generate a unique match identifier with timestamp and UUID"""
-    timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
-    match_id = uuid.uuid4().hex[:8]
-    return f"{timestamp}_{match_id}"
 from pathlib import Path
 import json
 import math
@@ -17,19 +6,23 @@ import random
 from engine import TrucoEngine
 from human_readable_match import format_match_events
 from litellm import completion, completion_cost
-#import litellm
-#litellm._turn_on_debug()
+import requests
+from datetime import datetime, timezone
+import uuid
 from match_events import MatchEventLogger
-from pathlib import Path
-import json
 import re
-from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type, wait_exponential
+from tenacity import retry, stop_after_attempt, retry_if_exception_type, wait_exponential
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import sys
-#litellm._turn_on_debug()
 
+os.environ["OR_APP_NAME"] = "TrucoArena"
+os.environ["OR_SITE_URL"] = "https://mariofilho.com"
 
-
+def generate_match_id():
+    """Generate a unique match identifier with timestamp and UUID"""
+    timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+    match_id = uuid.uuid4().hex[:8]
+    return f"{timestamp}_{match_id}"
 
 class MatchTraceLogger:
     def __init__(self, model_a, model_b, match_id):
@@ -567,12 +560,23 @@ def get_model_pair(available_models, weights):
     second = random.choices(remaining_models, weights=remaining_weights, k=1)[0]
     return (first, second)
 
+
+def get_openrouter_credits():
+    # curl https://openrouter.ai/api/v1/credits \-H "Authorization: Bearer <token>"
+    response = requests.get(
+        "https://openrouter.ai/api/v1/credits",
+        headers={
+            "Authorization": f"Bearer {os.environ['OPENROUTER_API_KEY']}"
+        }
+    )
+    data = response.json()
+    return round(data['data']['total_credits'] - data['data']['total_usage'])
+
 if __name__ == '__main__':
-    #from litellm.secret_managers.main import get_secret
-    #print(get_secret('OR_APP_NAME'))
+    #print(get_openrouter_credits())
     #import time
     #time.sleep(1000)
-    NUM_MATCHES = 32  # Set the number of matches to run in parallel
+    NUM_MATCHES = 16  # Set the number of matches to run in parallel
     # Load previous match counts
     try:
         with open('model_matches.json', 'r') as f:
@@ -592,7 +596,9 @@ if __name__ == '__main__':
         'openrouter/deepseek/deepseek-r1',
         'openrouter/anthropic/claude-3.5-sonnet',
         'openrouter/anthropic/claude-3.5-haiku',
-        'openrouter/qwen/qwen-max'
+        'openrouter/qwen/qwen-max',
+        'openrouter/qwen/qwen-turbo',
+        'openrouter/qwen/qwen-plus'
     ]
 
     # Calculate total matches across all models
@@ -615,7 +621,7 @@ if __name__ == '__main__':
         sys.exit(1)
         
     print('Active models and weights:', {model: weight for model, weight in zip(active_models, weights)})
-    executor = ThreadPoolExecutor(max_workers=8)
+    executor = ThreadPoolExecutor(max_workers=get_openrouter_credits())
     try:
         futures = [
             executor.submit(

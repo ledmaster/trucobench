@@ -3,7 +3,6 @@ import os
 import glob
 import re
 import json
-from datetime import datetime
 
 def calculate_elo_change(winner_elo, loser_elo, k_factor=32):
     """Calculate ELO rating changes after a match"""
@@ -135,8 +134,6 @@ def aggregate_results(match_dir='match_history'):
         if not m_scores or not m_winner:
             print(f"Match scores/winner not found in file {file}. Skipping.")
             continue
-        score_a = int(m_scores.group(1))
-        score_b = int(m_scores.group(2))
         winner = m_winner.group(1).strip()
 
         # Extract LLM costs for both players
@@ -152,7 +149,6 @@ def aggregate_results(match_dir='match_history'):
         if not m_timestamp:
             print(f"Timestamp not found in file {file}. Skipping.")
             continue
-        match_timestamp = datetime.fromisoformat(m_timestamp.group(1))
 
         # Initialize an entry for each model if not already present
         if model_a not in results:

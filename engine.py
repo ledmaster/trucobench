@@ -215,14 +215,16 @@ class TrucoEngine:
             self.pending_bet_response = True
         elif action['action'] == 'accept':
             if self.pending_bet_response is not True or not self.bet_stack:
-                raise ValueError(f"""Cannot accept bet in current state:
-- Current betting player: {self.current_betting_player}
-- Betting complete: {self.betting_complete}
-- Pending response: {self.pending_bet_response}
-- Current bet value: {self.current_bet}
-- Last bet action: {self.last_bet_action}
-- Bet stack: {self.bet_stack}
-- Full engine state: {vars(self)}""")
+                raise ValueError("Cannot accept bet in current state")
+#                raise ValueError(f"""Cannot accept bet in current state:
+# - Current betting player: {self.current_betting_player}
+# - Betting complete: {self.betting_complete}
+# - Pending response: {self.pending_bet_response}
+# - Current bet value: {self.current_bet}
+# - Last bet action: {self.last_bet_action}
+# - Bet stack: {self.bet_stack}""")
+                
+            
             # When accepting a bet, use the value from the last bet
             self.current_bet = self.bet_stack[-1]['value']
             self.betting_complete = True

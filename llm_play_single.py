@@ -619,7 +619,7 @@ if __name__ == '__main__':
             active_models.append(model)
             weight = math.sqrt(math.log(total_matches + 1)/(matches + 1))
             weights.append(weight)
-        elif matches < 30:
+        else:
             active_models.append(model)
             weight = math.sqrt(math.log(total_matches + 1)/(matches + 1))
             weights.append(weight)
