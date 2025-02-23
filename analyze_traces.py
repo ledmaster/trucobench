@@ -15,6 +15,7 @@ def main():
 
     # Iterate over each file in the match_history folder
     for filename in os.listdir(match_history_dir):
+        filename = "match_trace_20250221_193157_2f68e0be.jsonl"
         file_path = os.path.join(match_history_dir, filename)
         print(file_path)
         if os.path.isfile(file_path):
@@ -57,17 +58,20 @@ def main():
                 match_history_text += f"Model: {entry['model']}\n"
                 match_history_text += f"Player: {entry['player']}\n"
                 match_history_text += f"Action: {entry['action_type']}\n"
-                match_history_text += f"Response: {entry['content']}\n"
                 if entry['reasoning']:
                     match_history_text += f"Reasoning: {entry['reasoning']}\n"
+                match_history_text += f"Response: {entry['content']}\n"
+
                 match_history_text += "-" * 40 + "\n"
 
+            print(match_history_text)
+
             # Prepare the complete prompt
-            prompt = verifier_prompt_template.format(readable_match_history=match_history_text)
+            prompt = verifier_prompt_template.format(log=match_history_text)
             # Send the prompt to the LLM using litellm (adjust the API call if needed)
             messages = [{"role": "user", "content": prompt}]
-            response = completion(model='openrouter/openai/o3-mini',
-                                  messages=messages)
+            #response = completion(model='openrouter/openai/o3-mini',
+            #                      messages=messages)
 
             verification_output = response.choices[0].message.content
 
