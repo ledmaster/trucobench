@@ -20,10 +20,10 @@ def main():
         verifier_prompt_template = prompt_file.read()
 
     file_path = os.path.join(match_history_dir, args.filename)
-        print(file_path)
-        if os.path.isfile(file_path):
-            # Determine the corresponding analysis file path and skip if it exists
-            base_name, _ = os.path.splitext(filename)
+    print(file_path)
+    if os.path.isfile(file_path):
+        # Determine the corresponding analysis file path and skip if it exists
+        base_name, _ = os.path.splitext(args.filename)
             output_filename = f"{base_name}_analysis.txt"
             output_path = os.path.join(analysis_dir, output_filename)
             #if os.path.exists(output_path):
@@ -51,7 +51,7 @@ def main():
                                 }
                                 extracted_content.append(entry)
                     except json.JSONDecodeError:
-                        print(f"Warning: Could not parse line in {filename}")
+                        print(f"Warning: Could not parse line in {args.filename}")
                         continue
 
             # Format the extracted content into readable text
@@ -78,7 +78,7 @@ def main():
                                     messages=messages)
                 analysis_output = response.choices[0].message.content
             except Exception as e:
-                print(f"Error getting analysis for {filename}: {str(e)}")
+                print(f"Error getting analysis for {args.filename}: {str(e)}")
                 continue
 
             # Construct the output filename and write the analysis answer there
@@ -88,7 +88,7 @@ def main():
             with open(output_path, 'w', encoding='utf-8') as output_file:
                 output_file.write(analysis_output)
 
-            print(f"Saved analysis for {filename} to {output_filename}")
+            print(f"Saved analysis for {args.filename} to {output_filename}")
 
 if __name__ == '__main__':
     main()
