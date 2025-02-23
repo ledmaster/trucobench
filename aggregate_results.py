@@ -97,7 +97,6 @@ def list_model_matches(model_name, match_dir='match_history'):
         return
 
     # Regex patterns to extract needed info from the match file:
-    timestamp_pattern = r"🕒 Timestamp: (.+)"
     model_a_pattern = r"🤖 Player A Model: (.+)"
     model_b_pattern = r"🤖 Player B Model: (.+)"
     scores_pattern = r"🏁 \*\*Match Final Scores:\*\* Player A: (\d+), Player B: (\d+)"
@@ -106,7 +105,7 @@ def list_model_matches(model_name, match_dir='match_history'):
 
     print(f"\nMatches for model: {model_name}")
     print("-" * 100)
-    print(f"{'Timestamp':<20} {'Opponent':<40} {'Result':<10} {'Score':<15} {'Cost':<10}")
+    print(f"{'Match UUID':<20} {'Opponent':<40} {'Result':<10} {'Score':<15} {'Cost':<10}")
     print("-" * 100)
 
     for file in files:
@@ -131,13 +130,15 @@ def list_model_matches(model_name, match_dir='match_history'):
         if model_name_base not in [model_a_base, model_b_base]:
             continue
 
+        # Extract match UUID from filename
+        match_uuid = os.path.basename(file).split('_')[-1].split('.')[0]
+        
         # Extract other match details
-        m_timestamp = re.search(timestamp_pattern, content)
         m_scores = re.search(scores_pattern, content)
         m_winner = re.search(winner_pattern, content)
         m_cost = re.search(cost_pattern, content)
         
-        if not all([m_timestamp, m_scores, m_winner, m_cost]):
+        if not all([m_scores, m_winner, m_cost]):
             continue
 
         # Determine if our model was player A or B
@@ -159,7 +160,7 @@ def list_model_matches(model_name, match_dir='match_history'):
         opp_score = score_b if is_player_a else score_a
         score_str = f"{our_score}-{opp_score}"
         
-        print(f"{m_timestamp.group(1):<20} {opponent:<40} {result:<10} {score_str:<15} ${cost:.2f}")
+        print(f"{match_uuid:<20} {opponent:<40} {result:<10} {score_str:<15} ${cost:.2f}")
 
 def aggregate_results(match_dir='match_history'):
     # Aggregated results: { model: { 'wins': int, 'losses': int, 'cost': float, 'elo': float } }
