@@ -39,24 +39,20 @@ def bradley_terry_scores(wins_matrix):
     # Return normalized ratings
     return result.x - np.mean(result.x)
 
-def update_bt_ratings(results_dict, match_pairs):
-    """Update Bradley-Terry ratings for all models"""
+def update_bt_ratings(results_dict, head_to_head):
+    """Update Bradley-Terry ratings for all models using head-to-head records"""
     models = list(results_dict.keys())
     n_models = len(models)
     
     # Create wins matrix
     wins = np.zeros((n_models, n_models))
-    for i, model_i in enumerate(models):
-        for j, model_j in enumerate(models):
-            if i != j:
-                # Count matches between these models
-                pair = tuple(sorted([model_i, model_j]))
-                total_matches = match_pairs.get(pair, 0)
-                if total_matches > 0:
-                    # Estimate wins based on overall win rate when they played
-                    model_i_wins = (results_dict[model_i]['wins'] / 
-                                  (results_dict[model_i]['wins'] + results_dict[model_i]['losses']))
-                    wins[i][j] = total_matches * model_i_wins
+    
+    # Fill wins matrix using head-to-head records
+    for pair, (wins_1, wins_2) in head_to_head.items():
+        i = models.index(pair[0])
+        j = models.index(pair[1])
+        wins[i][j] = wins_1
+        wins[j][i] = wins_2
 
     # Calculate Bradley-Terry scores
     bt_scores = bradley_terry_scores(wins)
@@ -225,8 +221,9 @@ def aggregate_results(match_dir='match_history'):
         'B': {'wins': 0, 'losses': 0, 'cost': 0.0}
     }
     
-    # Track match pairs and their frequency
+    # Track match pairs and head-to-head records
     match_pairs = {}
+    head_to_head = {}  # Format: {(model1, model2): [model1_wins, model2_wins]}
 
     # Get all .jsonl files in the match events folder
     files = glob.glob(os.path.join(match_dir, '*.txt'))
@@ -288,17 +285,28 @@ def aggregate_results(match_dir='match_history'):
         if model_b not in results:
             results[model_b] = {'wins': 0, 'losses': 0, 'cost': 0.0, 'bt_rating': 0.0}
             
-        # Track this match pair
+        # Track this match pair and head-to-head record
         pair = tuple(sorted([model_a, model_b]))
         match_pairs[pair] = match_pairs.get(pair, 0) + 1
-
-        # Update wins/losses based on the match winner.
+        
+        if pair not in head_to_head:
+            head_to_head[pair] = [0, 0]
+        
+        # Update wins/losses and head-to-head records based on the match winner
         if winner == 'A':
             results[model_a]['wins'] += 1
             results[model_b]['losses'] += 1
+            if pair[0] == model_a:
+                head_to_head[pair][0] += 1
+            else:
+                head_to_head[pair][1] += 1
         elif winner == 'B':
             results[model_a]['losses'] += 1
             results[model_b]['wins'] += 1
+            if pair[0] == model_b:
+                head_to_head[pair][0] += 1
+            else:
+                head_to_head[pair][1] += 1
 
         # Update wins/losses for player positions.
         if winner == 'A':
@@ -319,8 +327,8 @@ def aggregate_results(match_dir='match_history'):
 
 
     # Output the aggregated results.
-    # Calculate Bradley-Terry ratings
-    update_bt_ratings(results, match_pairs)
+    # Calculate Bradley-Terry ratings using head-to-head records
+    update_bt_ratings(results, head_to_head)
     
     print("\nLeaderboard (by Bradley-Terry Rating) - Models with 10+ matches:")
     print("-" * 100)
