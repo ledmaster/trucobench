@@ -39,7 +39,7 @@ def bradley_terry_scores(wins_matrix):
     # Return normalized ratings
     return result.x - np.mean(result.x)
 
-def update_bt_ratings(results_dict):
+def update_bt_ratings(results_dict, match_pairs):
     """Update Bradley-Terry ratings for all models"""
     models = list(results_dict.keys())
     n_models = len(models)
@@ -320,7 +320,7 @@ def aggregate_results(match_dir='match_history'):
 
     # Output the aggregated results.
     # Calculate Bradley-Terry ratings
-    update_bt_ratings(results)
+    update_bt_ratings(results, match_pairs)
     
     print("\nLeaderboard (by Bradley-Terry Rating) - Models with 10+ matches:")
     print("-" * 100)
