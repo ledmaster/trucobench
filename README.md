@@ -16,6 +16,11 @@ Algumas inspirações:
 
 ## Resultados
 
+Os LLMs jogaram diversas partidas entre si.
+
+Abaixo, confira a tabela com os resultados e depois explore algumas análises que destacam os pontos fortes e as peculiaridades de cada modelo.
+
+
 | Modelo                              | Pontuação | Vit | Der | % Vit |
 |-------------------------------------|-----------|------|--------|----------|
 | claude-3.5-sonnet                   | 2.87      | 24   | 11     | 68.6     |
@@ -40,6 +45,8 @@ Pedi ao DeepSeek R1 que me ajudasse a analisar os dados das partidas, e ele me a
 - O modelo mais estratégico é o Claude-3.5-Sonnet. Ele teve uma taxa de agressividade moderada mas a segunda maior taxa de desistências e uma taxa baixa de aceitação de apostas iniciadas pelos oponentes. Isso, junto ao fato dele ser o número 1 em termos de vitórias, sugere traços de pensamento estratégico nas decisões.
 - O segundo modelo mais estratégico foi o o3-mini (avaliado com reasoning-effort='medium'). Ele também demonstra o padrão estratégico de apostas e desistências próximos do Claude, mas não parece decidir tão bem quanto o Sonnet.
 - O DeepSeek V3 (deepseek-chat) era extremamente passivo. Basicamente nunca apostava e desistia com muita frequência diante de apostas (imagine o abuso do Qwen Plus contra ele).
+
+O custo total aproximado para rodar as partidas foi de R$ 213,43.
 
 ### Respostas Interessantes dos LLMs
 
@@ -80,44 +87,26 @@ Com uma mão relativamente forte e estando perdendo, vale a pena aumentar a apos
 > 
 > ***[Ms. Casey, Lumon Industries](https://severance.wiki/half_loop_transcript)***
 
-## Visão Geral do Código
+## Por Dentro do TrucoBench
 
-O sistema é composto por dois módulos principais que trabalham em conjunto para simular partidas de Truco:
+O sistema é dividido em duas partes essenciais:
+- **Engine do Jogo:** Responsável por implementar as regras e a lógica do truco (arquivo `engine.py`).
+- **Integração com LLMs:** Gerencia as partidas e a tomada de decisões dos modelos (arquivo `llm_play.py`).
 
-1. **Motor do Jogo (engine.py)**: Implementa toda a lógica do Truco paulista
-2. **Partidas entre LLMs (llm_play.py)**: Responsável pela integração com modelos de linguagem para tomada de decisões
+### Fluxo da Partida
 
-## Funcionamento do Código (recomendo conhecer as regras do Truco antes de ler)
+1. **Inicialização:**  
+   - Criação e embaralhamento do baralho  
+   - Distribuição de 3 cartas por jogador  
+   - Definição da **vira** e cálculo das **manilhas**
 
-### 1. **Fase de Inicialização**
+2. **Andamento da Mão:**  
+   - Os LLMs analisam a situação e escolhem entre apostar, aceitar, aumentar ou desistir.  
+   - São jogadas até três rodadas por mão, onde o vencedor da maioria das rodadas leva os pontos.
 
-- Cria um baralho de 40 cartas e embaralha
-- Distribui 3 cartas por jogador
-- Revela a **vira** e calcula as **manilhas**
-
-Manilhas são as cartas mais fortes do jogo
-
----
-
-### 2. **Andamento da Mão**
-
-O truco é jogado em "mãos" e até 3 rodadas dentro dessas mãos. Cada vez que a inicialização acima acontece consideramos uma mão.
-
-Em cada rodada os LLMs: 
-   - Analisam o estado do jogo e suas cartas   
-   - Decidem entre apostar, aceitar uma aposta, aumentar a aposta ou desistir da mão
-   - Decidem quais cartas jogar, caso ninguém tenha desistido
-
-Caso um LLM ganhe duas rodadas, ele ganha a mão e os pontos correspondentes.
-
----
-
-### 3. **Partida**
-
-A partida termina quando algum LLM atinge 12 pontos ou mais.
-
-Isso às vezes acontece rápido (pode acontecer em uma mão só, se os LLMs ficarem aumentando a aposta), mas às vezes os LLMs são super passivos e ninguém aposta, jogando várias mãos dentro da mesma partida.
-
+3. **Final da Partida:**  
+   - A partida termina quando um dos LLMs atinge 12 pontos.
+   
 ## Sistema de Seleção dos LLMs
 
 Para cada partida sorteei um LLM para ser o jogador A e outro para ser o B, evitando que um LLM sempre fosse o primeiro ou último a jogar.
