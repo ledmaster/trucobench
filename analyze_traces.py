@@ -14,8 +14,8 @@ def main():
         verifier_prompt_template = prompt_file.read()
 
     # Iterate over each file in the match_history folder
-    for filename in os.listdir(match_history_dir):
-        filename = "match_trace_20250221_193157_2f68e0be.jsonl"
+    for filename in os.listdir(match_history_dir)[:1]:
+        filename = "match_trace_20250222_194616_533e35a9.jsonl"
         file_path = os.path.join(match_history_dir, filename)
         print(file_path)
         if os.path.isfile(file_path):
@@ -23,9 +23,9 @@ def main():
             base_name, _ = os.path.splitext(filename)
             output_filename = f"{base_name}_analysis.txt"
             output_path = os.path.join(analysis_dir, output_filename)
-            if os.path.exists(output_path):
-                print(f"Analysis for {filename} already exists, skipping.")
-                continue
+            #if os.path.exists(output_path):
+            #    print(f"Analysis for {filename} already exists, skipping.")
+            #    continue
 
             # Open and read the match file content, extracting choices content
             extracted_content = []
@@ -65,13 +65,14 @@ def main():
                 match_history_text += "-" * 40 + "\n"
 
             print(match_history_text)
-
+            return
             # Prepare the complete prompt
             prompt = verifier_prompt_template.format(log=match_history_text)
             # Send the prompt to the LLM using litellm (adjust the API call if needed)
             messages = [{"role": "user", "content": prompt}]
             try:
-                response = completion(model='openrouter/openai/o3-mini',
+                response = completion(model='gemini/gemini-2.0-pro-exp-02-05',
+                                      temperature=0,
                                     messages=messages)
                 analysis_output = response.choices[0].message.content
             except Exception as e:
