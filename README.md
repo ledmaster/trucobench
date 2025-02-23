@@ -5,9 +5,9 @@ Enquanto grandes laboratórios perdem tempo ensinando LLMs a jogar xadrez ou res
 **DOMINAR O TRUCO!** 🤯🎉
 
 Mas sério, eu queria encontrar uma tarefa em português que exigisse:
-✅ Conhecimento cultural que esteja majoritariamente em português em textos na internet (Têm mais materiais sobre pôquer do que truco em inglês)
-✅ Não possa ser respondido apenas com conhecimentos gerais (por exemplo, "Quem descobriu o Brasil?")
-✅ Exija "raciocínio" estratégico, planejamento. Quero saber se o modelo consegue entender as regras ao ponto de planejar maneiras de vencer o jogo
+- ✅ Conhecimento cultural que esteja majoritariamente em português em textos na internet (Têm mais materiais sobre pôquer do que truco em inglês)
+- ✅ Não possa ser respondido apenas com conhecimentos gerais (por exemplo, "Quem descobriu o Brasil?")
+- ✅ Exija "raciocínio" estratégico, planejamento. Quero saber se o modelo consegue entender as regras ao ponto de planejar maneiras de vencer o jogo
 
 Algumas inspirações:
 - [Tweet do Karpathy](https://x.com/karpathy/status/1885740680804504010) sugerindo a superioridade de testar LLMs usando jogos
