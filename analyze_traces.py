@@ -24,14 +24,14 @@ def main():
     if os.path.isfile(file_path):
         # Determine the corresponding analysis file path and skip if it exists
         base_name, _ = os.path.splitext(args.filename)
-            output_filename = f"{base_name}_analysis.txt"
-            output_path = os.path.join(analysis_dir, output_filename)
-            #if os.path.exists(output_path):
-            #    print(f"Analysis for {filename} already exists, skipping.")
-            #    continue
+        output_filename = f"{base_name}_analysis.txt"
+        output_path = os.path.join(analysis_dir, output_filename)
+        #if os.path.exists(output_path):
+        #    print(f"Analysis for {args.filename} already exists, skipping.")
+        #    continue
 
-            # Open and read the match file content, extracting choices content
-            extracted_content = []
+        # Open and read the match file content, extracting choices content
+        extracted_content = []
             with open(file_path, 'r', encoding='utf-8') as match_file:
                 for line in match_file:
                     try:
@@ -81,10 +81,7 @@ def main():
                 print(f"Error getting analysis for {args.filename}: {str(e)}")
                 continue
 
-            # Construct the output filename and write the analysis answer there
-            base_name, _ = os.path.splitext(filename)
-            output_filename = f"{base_name}_analysis.txt"
-            output_path = os.path.join(analysis_dir, output_filename)
+            # Write the analysis answer to the output file
             with open(output_path, 'w', encoding='utf-8') as output_file:
                 output_file.write(analysis_output)
 
