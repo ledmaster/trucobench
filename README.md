@@ -25,21 +25,22 @@ Abaixo, confira a tabela com os resultados e depois explore algumas análises qu
 
 | Modelo                              | Pontuação | Vit | Der | % Vit |
 |-------------------------------------|-----------|------|--------|----------|
-| claude-3.5-sonnet                   | 2.59      | 26   | 11     | 70.3     |
-| qwen-plus                           | 2.45      | 23   | 12     | 65.7     |
-| o3-mini                             | 2.03      | 18   | 14     | 56.2     |
-| gpt-4o                              | 1.98      | 19   | 16     | 54.3     |
-| qwen-max                            | 1.96      | 23   | 17     | 57.5     |
-| qwen-turbo                          | 1.95      | 16   | 16     | 50.0     |
-| deepseek-r1                         | 1.86      | 19   | 18     | 51.4     |
-| gemini-2.0-flash-thinking-exp-01-21 | 1.77      | 15   | 16     | 48.4     |
-| claude-3.5-haiku                    | 1.74      | 18   | 22     | 45.0     |
-| gemini-1.5-pro                      | 1.71      | 18   | 18     | 50.0     |
-| gemini-2.0-flash-lite-preview-02-05 | 1.6       | 17   | 18     | 48.6     |
-| gpt-4o-mini                         | 1.33      | 17   | 24     | 41.5     |
-| gemini-2.0-flash                    | 1.32      | 15   | 19     | 44.1     |
-| chatgpt-4o-latest                   | 1.28      | 13   | 21     | 38.2     |
-| deepseek-chat                       | 1.2       | 11   | 21     | 34.4     |
+| claude-3.5-sonnet                   | 2.41      | 27   | 13     | 67.5     |
+| qwen-plus                           | 2.25      | 24   | 14     | 63.2     |
+| claude-3.7-sonnet (base)            | 2.13      | 18   | 12     | 60.0     |
+| o3-mini                             | 2.02      | 21   | 16     | 56.8     |
+| qwen-max                            | 1.98      | 26   | 18     | 59.1     |
+| gpt-4o                              | 1.97      | 21   | 16     | 56.8     |
+| deepseek-r1                         | 1.76      | 19   | 18     | 51.4     |
+| qwen-turbo                          | 1.74      | 17   | 19     | 47.2     |
+| gemini-2.0-flash-thinking-exp-01-21 | 1.67      | 15   | 16     | 48.4     |
+| claude-3.5-haiku                    | 1.62      | 18   | 22     | 45.0     |
+| gemini-1.5-pro                      | 1.56      | 18   | 19     | 48.6     |
+| gemini-2.0-flash-lite-preview-02-05 | 1.45      | 17   | 19     | 47.2     |
+| gemini-2.0-flash                    | 1.27      | 16   | 20     | 44.4     |
+| gpt-4o-mini                         | 1.26      | 18   | 26     | 40.9     |
+| chatgpt-4o-latest                   | 1.18      | 13   | 21     | 38.2     |
+| deepseek-chat                       | 0.95      | 11   | 25     | 30.6     |
 
 Os resultados são ordenados pelo modelo [Bradley-Terry](https://en.wikipedia.org/wiki/Bradley%E2%80%93Terry_model) que é bastante utilizado para avaliar LLMs, inclusive para fazer o pós-treino.
 
