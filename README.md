@@ -5,14 +5,14 @@ Enquanto grandes laboratórios perdem tempo ensinando LLMs a jogar xadrez ou res
 **DOMINAR O TRUCO!** 🤯🎉
 
 Mas sério, eu queria encontrar uma tarefa em português que exigisse:
-- ✅ Conhecimento cultural que esteja majoritariamente em português em textos na internet (Têm mais materiais sobre pôquer do que truco em inglês)
+- ✅ Conhecimento cultural que esteja majoritariamente em português em textos na internet (Há mais materiais sobre pôquer do que sobre truco em inglês)
 - ✅ Não possa ser respondido apenas com conhecimentos gerais (por exemplo, "Quem descobriu o Brasil?")
 - ✅ Exija "raciocínio" estratégico, planejamento. Quero saber se o modelo consegue entender as regras ao ponto de planejar maneiras de vencer o jogo
 
 Algumas inspirações:
 - [Tweet do Karpathy](https://x.com/karpathy/status/1885740680804504010) sugerindo a superioridade de testar LLMs usando jogos
 - [SnakeBench](https://snakebench.com/): LLMs jogando o jogo da cobrinha entre eles
-- [Minecraft](https://x.com/hamptonism/status/1849537031568781424): você encontra vários tweets de usuários comparando quais modelos constróem estruturas melhores no Minecraft
+- [Minecraft](https://x.com/hamptonism/status/1849537031568781424): você encontra vários tweets de usuários comparando quais modelos constroem estruturas melhores no Minecraft
 
 ## Resultados
 
@@ -41,12 +41,12 @@ Abaixo, confira a tabela com os resultados e depois explore algumas análises qu
 | chatgpt-4o-latest                   | 1.28      | 13   | 21     | 38.2     |
 | deepseek-chat                       | 1.2       | 11   | 21     | 34.4     |
 
-Os resultados são rankeados pelo modelo [Bradley-Terry](https://en.wikipedia.org/wiki/Bradley%E2%80%93Terry_model) que é bastante utilizado para avaliar LLMs, inclusive para fazer o pós-treino.
+Os resultados são ordenados pelo modelo [Bradley-Terry](https://en.wikipedia.org/wiki/Bradley%E2%80%93Terry_model) que é bastante utilizado para avaliar LLMs, inclusive para fazer o pós-treino.
 
 Pedi ao DeepSeek R1 que me ajudasse a analisar os dados das partidas, e ele me ajudou a ver padrões interessantes:
 - O Qwen Plus foi o mais agressivo. Sempre apostando logo de primeira. Isso o ajudou a ficar em segundo lugar porque ele assustava a maioria dos modelos, que corriam das apostas.
 - Modelos menores sofrem para seguir padrões: em vários momentos eles tentam apostar fora de hora ou jogar cartas que não têm na mão
-- O modelo mais estratégico é o Claude-3.5-Sonnet. Ele teve uma taxa de agressividade moderada mas a segunda maior taxa de desistências e uma taxa baixa de aceitação de apostas iniciadas pelos oponentes. Isso, junto ao fato dele ser o número 1 em termos de vitórias, sugere traços de pensamento estratégico nas decisões.
+- O modelo mais estratégico é o Claude-3.5-Sonnet. Ele teve uma taxa de agressividade moderada, mas a segunda maior taxa de desistências, e uma taxa baixa de aceitação de apostas iniciadas pelos oponentes. Isso, junto ao fato dele ser o número 1 em termos de vitórias, sugere traços de pensamento estratégico nas decisões.
 - O segundo modelo mais estratégico foi o o3-mini (avaliado com reasoning-effort='medium'). Ele também demonstra o padrão estratégico de apostas e desistências próximos do Claude, mas não parece decidir tão bem quanto o Sonnet.
 - O DeepSeek V3 (deepseek-chat) era extremamente passivo. Basicamente nunca apostava e desistia com muita frequência diante de apostas (imagine o abuso do Qwen Plus contra ele).
 
@@ -81,7 +81,7 @@ Com uma mão relativamente forte e estando perdendo, vale a pena aumentar a apos
 
 #### Qwen Plus perde do R1 porque não entende o jogo
 
-Em uma partida com placar 9x10 entre o Deepseek R1 e o Qwen Plus, o Qwen levanta a aposta para "seis". O R1 raciocina e conclui que ele não pode correr, já que o adversário ganharia 3 pontos e ganharia a partida. Como tinha manilha, o R1 decide subir a aposta para "nove" para tentar fazer o adversário desistir, já que sua manilha era do naipe mais fraco. O Qwen Plus, não entendendo que se corresse perderia o jogo automaticamente, correu com a seguinte justificativa:
+Em uma partida com placar 9x10 entre o Deepseek R1 e o Qwen Plus, o Qwen aumenta a aposta para "seis". O R1 raciocina e conclui que ele não pode correr, já que o adversário ganharia 3 pontos e ganharia a partida. Como tinha manilha, o R1 decide subir a aposta para "nove" para tentar fazer o adversário desistir, já que sua manilha era do naipe mais fraco. O Qwen Plus, não entendendo que se corresse perderia o jogo automaticamente, correu com a seguinte justificativa:
 
 Justificativa: Estamos em uma situação de alta aposta (9 pontos) com cartas relativamente fracas (KOP e 5OU) e precisamos proteger nosso placar atual de 10 pontos, já que o adversário está muito próximo de vencer o jogo com 9 pontos. Correr é a melhor opção para evitar perder muitos pontos com um mão desvantajosa.
 
@@ -89,24 +89,24 @@ Justificativa: Estamos em uma situação de alta aposta (9 pontos) com cartas re
 
 Apesar de ter as regras do jogo especificadas no prompt inicial, o DeepSeek fica repetidamente se questionando sobre esses aspectos: "That doesn't make sense," "Maybe there's a typo," "But according to the rules...".
 
-Ele costuma se confundi ao ver duas cartas na mão em vez de três (mesmo tendo a informação que não é a primeira rodada da mão) e questiona a força de cada carta com relação ao ranking delas em outros tipos de jogos (como pôquer).
+Ele costuma se confundir ao ver duas cartas na mão em vez de três (mesmo tendo a informação que não é a primeira rodada da mão) e questiona a força de cada carta com relação ao ranking delas em outros tipos de jogos (como pôquer).
 
 Já havia visto esse padrão em alguns posts no X, onde não apenas o R1, mas outros modelos sentem dificuldade quando vêem algo no prompt que vai contra o que viram durante o treinamento.
 
 Neste caso, o R1 deve ter visto bem mais texto sobre outros jogos de cartas e precisa se esforçar para superar esses padrões. Isso pode explicar a baixa performance.
 
-Existe um [paper que sugere que LLMs produzem mais tokens de raciocínio quando erram respostas](https://arxiv.org/abs/2501.18585).
+Existe um [artigo que sugere que LLMs produzem mais tokens de raciocínio quando erram respostas](https://arxiv.org/abs/2501.18585).
 
 Ele foi MUITO repetitivo nesses jogos, o que o fez ser o modelo mais caro para rodar (muitos tokens de raciocínio que são cobrados como "output tokens").
 
 
-## Quão séria é essa benchmark?
+## Quão séria é esta avaliação?
 
 > "Todas as benchmarks estão erradas, mas algumas são úteis."
 > 
 > ***Machado de Assis***
 
-⚠️ Esta benchmark foi um exercício para eu aprender mais sobre avaliações de LLMs e sobre o comportamento deles com prompts em português numa atividade que exige planejamento e "raciocínio" (ou algo parecido). Certamente existem bugs que, por mais que eu tenha verificado e testado, ainda estão no código. Então não considere essa (ou qualque outra) benchmark uma medida perfeita das capacidades dos LLMs. Além disso, a qualidade dos resultados pode variar dependendo do modelo e do prompt. Aqui sigo a seguinte recomendação:
+⚠️ Esta benchmark foi um exercício para eu aprender mais sobre avaliações de LLMs e sobre o comportamento deles com prompts em português numa atividade que exige planejamento e "raciocínio" (ou algo parecido). Certamente existem bugs que, por mais que eu tenha verificado e testado, ainda estão no código. Então não considere essa (ou qualquer outra) benchmark uma medida perfeita das capacidades dos LLMs. Além disso, a qualidade dos resultados pode variar dependendo do modelo e do prompt. Aqui, sigo a seguinte recomendação:
 
 > "Por favor, tente garantir que os bugs afetem todos os modelos de forma igual."
 > 
